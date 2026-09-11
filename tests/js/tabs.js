@@ -43,9 +43,6 @@ function pane(path) {
     return p
 }
 function run(check) {
-    // A search sets pane.path to the scope it walks and keeps the origin in searchFrom, which
-    // dropOverlay clears. openNew is driven whole rather than restingPath alone, because the defect
-    // was the ORDER of those two and a test on restingPath by itself passes either way.
     var searching = pane("/")
     searching.searchMode = "results"
     searching.searchFrom = "/home/gm/Work"
@@ -85,8 +82,6 @@ function run(check) {
     var plain = pane("/tmp/here")
     Tabs.openNew(plain)
     check("an ordinary listing opens its tab on its own path", plain.tabs.items[1].path, "/tmp/here")
-    // The cursor is clamped when a listing arrives and the selection was not, so a row past the end
-    // of a directory that shrank while the tab was hidden was selected anyway.
     var shrunk = { total: 3, selectionVersion: 0, toggled: [], clearSelection: function () {} }
     shrunk.selection = { toggle: function (i) { shrunk.toggled.push(i) } }
     Tabs.restoreSelection(shrunk, [0, 2, 7, 40])
@@ -97,7 +92,6 @@ function run(check) {
     Tabs.restoreSelection(none, [1, 2])
     check("and a restore that kept nothing does not announce a selection change",
           none.toggled.length + "|" + none.selectionVersion, "0|5")
-    // The clamp alone was not enough: a row deleted BELOW a kept index leaves that index in range
     // and naming a different file, which trash would then act on. A switch that re-lists carries no
     // selection at all now, and the re-list's own reset is what clears it.
     var moved = pane("/tmp/a")
