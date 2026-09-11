@@ -275,6 +275,9 @@ function crumbs(path, home) {
 }
 
 // Backspace and the chrome's up arrow: the root has no parent, so it is where climbing stops.
+// Backspace, h, and the chrome's up arrow. The root has no parent, so it is where climbing stops.
+// pendingSelect is the directory we are leaving, so the parent listing puts the cursor on it
+// rather than on the first row: h then l is a round trip.
 function parent(pane) {
     if (pane.listInFlight) {
         pane.message("A directory is already loading.", false)
@@ -283,6 +286,8 @@ function parent(pane) {
     if (pane.path === "/") {
         return
     }
-    var cut = pane.path.lastIndexOf("/")
-    pane.open(cut <= 0 ? "/" : pane.path.substring(0, cut))
+    var here = pane.path
+    var cut = here.lastIndexOf("/")
+    pane.pendingSelect = here
+    pane.open(cut <= 0 ? "/" : here.substring(0, cut))
 }
