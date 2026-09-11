@@ -31,7 +31,6 @@ function snapshot(pane, path) {
         viewMode: pane.viewMode,
         showHidden: pane.showHidden,
         selected: elsewhere ? [] : pane.selectedIndices().slice(),
-        // Which listing those indices were made on: a re-read while the tab is hidden renumbers them.
         listed: Number(pane.backend.listRequests) || 0,
         sortBy: pane.backend.sortBy,
         sortDesc: pane.backend.sortDesc,
@@ -95,9 +94,6 @@ function currentIndex(pane) {
     return pane.tabs ? pane.tabs.index : 0
 }
 
-// Answers whether the rows on screen were a search's results, because clearing the search leaves
-// them there: every caller that then lands on the very directory the walk was scoped to has to
-// re-list it, or the walk's rows stay up under an ordinary header with nothing to ever refresh them.
 function dropOverlay(pane) {
     var results = pane.searchMode === "results"
     if (pane.searchMode.length > 0) {
@@ -144,7 +140,6 @@ function restoreSelection(pane, selected) {
         pane.selectionVersion++
 }
 
-// relist forces the listing even when the tab names the path the pane is on, for a pane whose rows
 // are a search's and not that directory's.
 function apply(pane, item, relist) {
     var same = !relist && pane.path === item.path && pane.showHidden === item.showHidden

@@ -2,7 +2,6 @@
 .import "../../ui/js/Keymap.js" as Keymap
 .import "../../ui/js/Menu.js" as Menu
 .import "../../ui/js/TextSize.js" as TextSize
-
 // The settings panel's model. ui/SettingsPanel.qml only paints what rows() returns, so every row a
 // section can draw, and every value a control can hold, is assertable here without a window.
 
@@ -54,7 +53,6 @@ function runInventory(check) {
               var mine = Settings.GLYPHS[id] !== undefined ? Settings.GLYPHS[id] : Settings.MARKS[id]
               return mine === undefined || mine !== builtMark[id]
           }).join(","), "")
-    // SettingsPlaces section 02 adds the listing Favorite action; SettingsMenus keeps its 21 switches and Menus' New folder has none.
     var reachable = switched.concat(Settings.LOCKED).concat(["newFolder", "addFavourite"])
     check("no other menu action is omitted from the board's switch inventory",
           Object.keys(built).filter(function (id) { return reachable.indexOf(id) < 0 }).join(","), "")

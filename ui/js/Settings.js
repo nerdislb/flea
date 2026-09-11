@@ -2,7 +2,6 @@
 .import "TextSize.js" as TextSize
 .import "Places.js" as Places
 .import "Keymap.js" as Keymap
-
 // Sections follow the current Desktop boards; their state uses the shared ui.json updater.
 var SECTIONS = [
     { id: "view", label: "View", glyph: "sliders" },
@@ -13,7 +12,6 @@ var SECTIONS = [
     { id: "menus", label: "Menus", glyph: "list" },
     { id: "about", label: "About", glyph: "info" }
 ]
-
 // Where a section id sits in SECTIONS, or 0 for an id no section carries.
 function sectionIndex(id) {
     for (var i = 0; i < SECTIONS.length; i++) {

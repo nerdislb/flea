@@ -1,10 +1,8 @@
 .import "../../ui/js/Focus.js" as Focus
 .import "../../ui/js/Keymap.js" as Keymap
 .import "filterfixture.js" as Fixture
-
 // Focus.lookup is where a key is discarded for being meaningless in the current state, and a wrong
 // gate there is silent: the key simply does nothing, and no suite but this one would notice.
-
 function pane(preview, viewMode) {
     return {
         focusView: "list",
@@ -14,7 +12,6 @@ function pane(preview, viewMode) {
         preview: preview
     }
 }
-
 // A pane showing search results, which is the one state the two sort keys are taken away in.
 function searching(preview) {
     var p = pane(preview)
@@ -264,9 +261,6 @@ function run(check) {
     Focus.act("addNetwork", dialled)
     check("and act opens it through the rail's own signal", dialled.sidebar.asked, 1)
 
-    // Finder's Cmd+1/2/3: the same chooseView the chrome's three buttons call, so the chord and
-    // the click persist the one stored view. The mock records what reaches it, because a chord
-    // that switched the view on screen without calling chooseView would otherwise pass this suite.
     var viewed = listPane(true)
     viewed.persisted = []
     viewed.chooseView = function (mode) { this.viewMode = mode; this.persisted.push(mode) }

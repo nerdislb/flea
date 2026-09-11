@@ -1,9 +1,7 @@
 .import "../../ui/js/Nav.js" as Nav
-
 // Nav.js had no suite at all, so nothing loaded it outside the running app and a broken .import in
 // it would first have been seen on the box. These are its two pure functions, which ui/ColumnsArea.qml
 // walks the Miller trail with, plus the reset that a fresh listing runs.
-
 // Only the members openWithoutHistory writes, so the check is what a new listing forgets.
 function pane() {
     var p = {
@@ -43,7 +41,6 @@ function pane() {
     }
     return p
 }
-
 // A pane that can navigate: the two wrappers ui/Pane.qml carries, so back(), parent() and the mouse
 // button all take the one route into openWithoutHistory rather than a stub that cannot refuse.
 function browsing(history) {
@@ -59,7 +56,6 @@ function browsing(history) {
     p.openWithoutHistory = function (target) { Nav.openWithoutHistory(p, target) }
     return p
 }
-
 // What Enter did with one row, as one line: the directory it navigated to, the preview it opened,
 // and the path it handed the opener. Exactly one of the three may be filled for any row.
 function entered(row) {
@@ -72,16 +68,13 @@ function entered(row) {
     Nav.openCursor(p, { open: function (path) { went[2] = path } })
     return went.join("|")
 }
-
 // The two readings a crumb check makes: what the bar draws, and where each piece would take you.
 function drawn(list) {
     return list.map(function (c) { return c.text }).join("")
 }
-
 function targets(list) {
     return list.map(function (c) { return c.path }).join(" ")
 }
-
 function run(check) {
     var travel = browsing(["/home/gm"])
     Nav.back(travel)
@@ -100,14 +93,12 @@ function run(check) {
     travel.listInFlight = false
     Nav.open(travel, "/tmp")
     check("new navigation discards the old forward branch", travel.forwardHistory.length, 0)
-
     check("a path's parent is everything above its last separator", Nav.parentOf("/home/gm/Work"), "/home/gm")
     check("a child of the root has the root as its parent", Nav.parentOf("/home"), "/")
     check("the root is its own parent, which is where climbing stops", Nav.parentOf("/"), "/")
     check("a leaf is the last component", Nav.leafOf("/home/gm/Work"), "Work")
     check("a trailing separator leaves the path as its own leaf", Nav.leafOf("/home/gm/"), "/home/gm/")
     check("the root has no leaf of its own", Nav.leafOf("/"), "/")
-
     // Everything a fresh listing forgets, written once so no caller can half-do it. The filter is on
     // that list: it narrows the rows already listed, and these are about to be different rows.
     var fresh = pane()
@@ -125,7 +116,6 @@ function run(check) {
     // editor over whatever file arrived at that row, and in the parent it was a directory.
     check("and forgets the open rename, whose row is about to be a different file",
           fresh.renamingIndex, -1)
-
     // The in-flight guard is what stops a second Enter queueing a listing behind one already asked
     // for, and nothing may be forgotten on a navigation that was refused.
     var busy = pane()
@@ -137,10 +127,6 @@ function run(check) {
     check("and leaves the cursor where it was", busy.cursorIndex, 7)
     check("and leaves the locked mode standing too", busy.lockedMode, 0o40750)
     check("and leaves an open rename alone, because the listing did not change", busy.renamingIndex, 4)
-
-    // A refresh re-reads the directory under the listing rather than opening another one, so the
-    // rows already drawn, their count and the cursor all stand until the new ones land: nothing
-    // paints an empty frame, and the cursor's index is what the reply puts the cursor back on.
     var kept = pane()
     Nav.refresh(kept, "")
     check("a refresh leaves the rows, the count and the cursor standing",
@@ -150,15 +136,10 @@ function run(check) {
     check("but still forgets what is indexed by row, because the rows are about to be renumbered",
           kept.thumbState + "|" + kept.dirSizeState + "|" + kept.trashArmedAt + "|" + kept.cleared,
           "[object Object]|[object Object]|0|1")
-
-    // A refresh that names a path reveals that row instead, the way rename and new folder do.
     var named = pane()
     Nav.refresh(named, "/home/gm/new.txt")
     check("a refresh with a target reveals the target rather than the old index",
           named.pendingSelect + "|" + named.pendingCursor, "/home/gm/new.txt|-1")
-
-    // The rows reply applies the index once, clamped to the listing that came back: trashing the
-    // last row leaves the cursor on the new last row, not one past the end.
     var landed = pane()
     landed.pendingCursor = 7
     landed.total = 5
@@ -174,9 +155,6 @@ function run(check) {
     var idle = pane()
     Nav.applyPendingSelect(idle)
     check("a reply with nothing pending moves the cursor nowhere", idle.placed.length, 0)
-
-    // A navigation is not a re-read, so a pending cursor a failed refresh left behind must not
-    // land on some row of the next directory opened.
     var moved = pane()
     moved.pendingCursor = 7
     Nav.openWithoutHistory(moved, "/home/gm/Work")
@@ -193,7 +171,6 @@ function run(check) {
     check("and says so, which is the sentence every refused navigation gives",
           loading.said.join(""), "A directory is already loading.")
     check("and sends no listing", loading.sent.length, 0)
-
     // Issue 20 asked for the mouse's back button to climb. Nautilus and Explorer bind that button to
     // history, so it goes back where there is somewhere to go back to and climbs where there is not:
     // one button, both meanings, and no forward stack because the chrome draws one arrow.
@@ -229,7 +206,6 @@ function run(check) {
           menuUp.path + "|" + menuUp.sent.length, "/home/gm/Work|0")
     check("and keeps the history entry it would have popped, so the menu's rows stay its own",
           menuUp.history.join(","), "/home/gm")
-
     // open()'s own copy of the guard back() carries. The push happened before openWithoutHistory
     // could refuse the listing, so a crumb clicked during a load stacked the directory the pane was
     // already standing in and the next back press navigated to where it already was.
@@ -240,7 +216,6 @@ function run(check) {
     check("and stays where it is, saying the sentence every refused navigation gives",
           busyOpen.path + "|" + busyOpen.said.join(""),
           "/home/gm/Work|A directory is already loading.")
-
     // Issue 45: the chrome's path as the pieces a click can land on. The pieces have to concatenate
     // to exactly the one line they replace, or the bar draws something nobody asked for, and each
     // has to name the directory ui/ChromeBar.qml would hand to pathEntered.
@@ -288,7 +263,6 @@ function run(check) {
     check("a directory still navigates and every other row still goes to the opener",
           entered({ n: "Work", d: true }) + " / " + entered({ n: "notes.txt", i: "text-x-generic", s: 12 }),
           "/home/gm/Work|| / ||/home/gm/notes.txt")
-    // h climbs the tree and keeps the place: the parent listing selects the directory we left.
     var up = pane()
     up.path = "/home/gm/Work"
     up.opened = []

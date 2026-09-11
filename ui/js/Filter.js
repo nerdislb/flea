@@ -1,8 +1,6 @@
 .pragma library
-
 .import "Match.js" as Match
 .import "Thumbs.js" as Thumbs
-
 // The filter narrows the listing already on screen: no walk, no round trip, and every row it keeps
 // is one the backend has already sent. ui/js/Search.js is its bigger sibling, which walks the
 // subtree and replaces the listing; the design canvas draws the two as different things and this
@@ -11,7 +9,6 @@
 // Two index spaces meet here. A "listing row" is what the backend numbers, what a selection holds
 // and what every write operation sends; a "view position" is where a row is drawn. With no filter
 // up the two are the same number, and at() and viewOf() below are the only places that convert.
-
 // The listing rows a query leaves standing, in the order the backend sent them, or null when there
 // is no filter at all. Only the rows the pane holds can be tested, so the answer is a subsequence
 // of the held window; scope() below is what says so when the window is not the whole listing.
@@ -29,7 +26,6 @@ function shown(rows, held, query) {
     }
     return out
 }
-
 function at(list, view) {
     if (list === null) {
         return view
@@ -38,19 +34,13 @@ function at(list, view) {
     // shrinks, so a position past the end answers -1: a listing row nothing holds and nothing draws.
     return view < list.length ? list[view] : -1
 }
-
 // -1 for a row the filter hides, which is what the callers below clamp against.
 function viewOf(list, row) {
     return list === null ? row : list.indexOf(row)
 }
-
-// Whether the cursor is on a row the filter draws. A query that matches nothing leaves the cursor
-// where it stood, on a row nobody can see, and the operations that fall back to the cursor row read
-// this first: a dd over "Nothing matches" trashed the file under it, the accident prune() exists for.
 function cursorShown(pane) {
     return viewOf(pane.shown === undefined ? null : pane.shown, pane.cursorIndex) >= 0
 }
-
 // The canvas's own line under the last row it left standing, States.dc.html "Filter active".
 function note(list, loaded, query) {
     if (list === null) {
@@ -65,14 +55,12 @@ function note(list, loaded, query) {
     }
     return dropped + (dropped === 1 ? " row" : " rows") + " hidden by the filter"
 }
-
 // The pane holds a window around the viewport, not the directory, so on a listing bigger than that
 // window the filter has only seen the rows it holds and the strip says which ones. Empty when the
 // window is the whole listing, which is the OEM rule of saying nothing when there is nothing to say.
 function scope(loaded, total) {
     return total > loaded ? "in the " + loaded + " rows loaded" : ""
 }
-
 // The rows drawn between two ends, which is not the range between them: a plain index range would
 // sweep up every row the filter hid in the gap, and nothing on screen would say it had.
 function between(list, a, b) {
@@ -86,7 +74,6 @@ function between(list, a, b) {
     }
     return out
 }
-
 // A request cut back to the rows still drawn. A filtered viewport covers a set and not a run, so
 // the range-shaped planners hand back rows the filter hides, and asking for those would fetch work
 // nothing draws.
@@ -106,7 +93,6 @@ function keep(asked, list) {
     }
     return out
 }
-
 // A pending thumbnail can be hidden inside the planner's span as well as outside its viewport.
 function cut(work, list, state) {
     var drop = work.drop.slice()
@@ -123,7 +109,6 @@ function cut(work, list, state) {
     }
     return { ask: keep(work.ask, list), drop: drop }
 }
-
 // The listing rows a view range covers, for the two planners that take a first and a last.
 function span(list, first, last) {
     if (list === null) {
@@ -136,10 +121,8 @@ function span(list, first, last) {
     var hi = Math.max(0, Math.min(list.length - 1, last))
     return { first: list[lo], last: list[hi] }
 }
-
 // The transitions, taking ui/Pane.qml's root the way ui/js/Search.js and ui/js/Sort.js do: the pane
 // holds the state, this holds what the state does.
-
 // "/" opens the query line. Unlike the search's, nothing is committed to start a walk: the rows are
 // already here, so the listing narrows on the keystroke itself.
 function start(pane) {
@@ -272,7 +255,6 @@ function extendToRow(pane, index) {
     pane.selectionVersion += 1
 }
 
-// Ctrl+click, v's mouse twin. An empty set means the cursor row is selected, so it joins first.
 function toggleRow(pane, index) {
     if (pane.selection.count() === 0 && pane.cursorIndex !== index) {
         pane.selection.toggle(pane.cursorIndex)

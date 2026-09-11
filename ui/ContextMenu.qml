@@ -3,11 +3,9 @@ import qs.Commons
 import "." as Flea
 import "js/Keymap.js" as Keymap
 import "js/Menu.js" as Menu
-
 // A plain overlay, not a QQC Popup: the one Controls import cost 10 ms of warm startup.
 Item {
     id: root
-
     // Fires with the row's own action string ("open", "trash"); a chosen Taildrop peer fires
     // "taildrop:<peerId>" instead, so one signal covers both without a second wire. The header's
     // rows fire "col:<key>" and "toggleHidden", routed in ui/Pane.qml's onChosen.

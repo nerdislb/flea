@@ -9,15 +9,12 @@ import "js/Search.js" as Search
 import "js/Tabs.js" as Tabs
 import "js/Thumbs.js" as Thumbs
 import "js/Transfer.js" as Transfer
-
 // Every reply from outside the window lands here: the backend's, and those of the three foreign
 // programs the pane runs (the opener, the Dropbox share link, Taildrop). Split out of ui/Pane.qml
 // the way ui/List.qml was; it owns no state of its own and writes only through the pane handed in.
 Item {
     id: root
-
     property var pane: null
-
     // The listing's floor as a drop target, under the rows: a drop past the last row, or one a file
     // row refused, lands in the directory being shown. Declared first in ui/Pane.qml, so it sits below.
     // Columns owns its narrower active floor; a search listing's path is the walk scope, not a row's home.
@@ -60,11 +57,8 @@ Item {
     readonly property alias shareLink: shareLink
     readonly property alias taildrop: taildrop
     readonly property alias localSend: localSend
-
     function sendLocalSend() { if (localSend.available) LocalSendJs.request(pane) }
-
     Flea.LocalSend { id: localSend }
-
     Flea.Opener {
         id: opener
         // A dropped request is the app being busy, not a failure, so it takes the plain role.
@@ -75,17 +69,14 @@ Item {
         onTerminalBusy: function (path) { pane.message("Still opening the last terminal; try again in a moment.", false) }
         onTerminalFailed: function (path) { pane.message("No terminal on this system opened that directory.", true) }
     }
-
     Flea.ShareLink {
         id: shareLink
         onCopied: pane.message("Share link copied to the clipboard.", false)
         onFailed: function(reason) { pane.message(reason, true) }
     }
-
     Flea.Taildrop {
         id: taildrop
     }
-
     // The owed re-read, run when nothing is holding the rows. A refusal keeps the debt rather than
     // dropping it, and watchBusy going false below is what pays it.
     function reread() {
@@ -94,19 +85,16 @@ Item {
         root.stale = false
         root.anchor = Nav.refreshWatched(pane)
     }
-
     // The owed re-read goes through the timer rather than straight out of this handler: reading
     // watchBusy back inside its own change notification re-enters the binding, which Qt reports as a
     // binding loop, and reread() writes listInFlight, which watchBusy reads.
     onWatchBusyChanged: if (root.stale && !watchSettle.running) watchSettle.start()
-
     Timer {
         id: watchSettle
         interval: root.watchMs
         repeat: false
         onTriggered: root.reread()
     }
-
     // A debt owed for the directory the pane has left is not owed by the one it arrived in: without
     // this, a change in A held back by a selection is paid by a full re-list of B.
     Connections {
@@ -121,7 +109,6 @@ Item {
         function onMenuSelectionIdentityChanged() { root.retrySelectionText = "" }
         function onListInFlightChanged() { if (!pane.listInFlight) root.locateRetry() }
     }
-
     function locateRetry() {
         if (!root.retryId || root.retryListing || pane.listInFlight || pane.searchRunning) return
         if (pane.path !== root.retryFolder) { root.retryId = 0; root.retryPaths = []; return }
@@ -324,11 +311,6 @@ Item {
             } else pane.refresh("")
         }
 
-        // The refresh keeps the cursor's index and the rows below what left shift up into it, so the
-        // cursor lands on the row after the one removed. A selection leaves as a block, so the cursor
-        // goes to its first row before the refresh reads the index: vim's dd in both cases. The row
-        // is the one the request went out with, because the cursor was free to move while the
-        // backend worked and the block that left is where it was then.
         function onTrashed(ok, failed) {
             pane.sticky("")
             pane.message(Ops.trashed(ok, failed), ok === 0)
@@ -416,8 +398,6 @@ Item {
         function onFailed(where, input, message, mode) {
             // A listing that failed cannot seat the row a peeked right click asked for, so its menu intent dies here.
             pane.pendingMenu = false
-            // A refused transfer leaves its classification behind, and the next
-            // one is then labelled with the kind of the one that never ran.
             Ops.clearPendingKind(pane, where)
             var text = Errors.sentence(where, message)
             var terminal = where === "backend" || where === "read"

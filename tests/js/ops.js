@@ -1,6 +1,5 @@
 .import "../../ui/js/Ops.js" as Ops
 .import "../../ui/js/Transfer.js" as Transfer
-
 function run(check) {
     var sent = [], messages = []
     var sender = {reason: "Peer went offline", send: function(id, paths) { return false }, labelFor: function() { return "Laptop" }}
@@ -24,11 +23,9 @@ function run(check) {
     check("and an unverified one says what was not checked",
           Ops.archiveDoneLine(false),
           "Extracted. The archive index could not be read, so this was not verified.")
-
     check("one item is singular and two are not",
           Ops.items(1) + " / " + Ops.items(2) + " / " + Ops.items(0),
           "1 item / 2 items / 0 items")
-
     // The Operations board separates its live item name with a middle dot.
     check("a copy in flight reads the way the canvas draws it",
           Ops.progressLine({ moving: false, n: 5, index: 1, name: "photo.heic" }),
@@ -49,7 +46,6 @@ function run(check) {
     check("an item with no name yet still counts",
           Ops.progressLine({ moving: false, n: 2, index: 0, name: "" }),
           "Copying 1 of 2")
-
     check("a finished copy names its own reversal",
           Ops.transferDone({ moving: false, n: 2 }, 2, 0, 0, false),
           "Copied 2 items · z undoes")
@@ -81,7 +77,6 @@ function run(check) {
     check("multiple verified retry matches report their actual selected count",
           Ops.retrySelectionLine([{path: "/source/c.txt", index: 2}, {path: "/source/d.txt", index: 3}]),
           "2 items selected for retry")
-
     // The canvas draws this one verbatim on the Operations artboard's status strip.
     check("trash reads exactly as the canvas draws it",
           Ops.trashed(4, 0),
@@ -92,7 +87,6 @@ function run(check) {
     check("a partly failed trash reports both halves",
           Ops.trashed(3, 1),
           "Moved 3 items to Trash, 1 failed · z undoes")
-
     check("undo names the operation it reversed",
           Ops.undone("rename") + " / " + Ops.undone("move"),
           "Undid the rename. / Undid the move.")
@@ -104,18 +98,15 @@ function run(check) {
     check("undoing a new folder says what came off the disk",
           Ops.undone("mkdir"),
           "Removed the new folder.")
-
     check("the clipboard says what it took and how to use it",
           Ops.copied(2, true) + " / " + Ops.copied(1, false),
           "Cut 2 items, p pastes. / Copied 1 item, p pastes.")
-
     check("a leaf is the part after the last separator",
           Ops.leaf("/home/gm/photo copy.jpg"),
           "photo copy.jpg")
     check("a name with no separator is already its own leaf",
           Ops.leaf("bare.txt"),
           "bare.txt")
-
     var fresh = Ops.emptyClipboard()
     check("a fresh clipboard holds nothing and is not a move",
           fresh.paths.length + "/" + fresh.moving,
@@ -154,14 +145,12 @@ function run(check) {
             clipboard: null
         }
     }
-
     // targetPaths is where they go: it pushes only when rowFor answered, so thirty-five indices
     // leave no path and no trace. Asserted so the shape cannot come back quietly.
     var dropped = windowedPane([])
     check("targetPaths keeps only the rows the window happens to hold",
           Ops.targetPaths(dropped, dropped.selectedIndices()).length + " of 40",
           "5 of 40")
-
     // So a move must hand the backend INDICES. transfer takes a rows array, protocol.md says so in
     // bold and run.rs resolves it, and sending paths instead relocates five files and abandons
     // thirty-five with no error, no count and no message.
@@ -172,7 +161,6 @@ function run(check) {
           move && move.rows ? String(move.rows.length)
                             : "truncated to " + (move && move.paths ? move.paths.length : 0),
           "40")
-
     // Compress has the same defect through the same function, and the archive request has no rows
     // form, so it must resolve the indices first rather than name the handful it can see.
     var sentZip = []
@@ -182,7 +170,6 @@ function run(check) {
           zip && zip.c === "paths" ? String(zip.rows.length)
                                    : "built an archive of " + (zip && zip.paths ? zip.paths.length : 0),
           "40")
-
     // The condition on opening Pane.qml: one paths reply now has two possible askers, and the
     // clipboard is the one that already worked. An unclaimed reply must still land where it always did.
     var clipPane = windowedPane([])
@@ -191,7 +178,6 @@ function run(check) {
     check("a paths reply with nothing pending still reaches the clipboard",
           clipPane.clipboard ? clipPane.clipboard.paths.length + "/" + clipPane.clipboard.moving : "lost",
           "2/true")
-
     // And a reply the compress asked for builds the archive from the whole resolved list.
     var sentResolved = []
     var zipPane = windowedPane(sentResolved)
@@ -208,7 +194,6 @@ function run(check) {
     check("and the reply is consumed, so a later clipboard answer is not stolen by it",
           String(zipPane.pathsPending),
           "null")
-
     var captured = ["/d/captured.txt", "/d/second.txt"]
     var capturedRequests = []
     var capturedPane = windowedPane(capturedRequests)
@@ -223,7 +208,6 @@ function run(check) {
     Ops.moveToDropbox(capturedPane, "/dropbox", 32)
     check("Dropbox transfer retains the menu identity alongside the full selection",
           capturedRequests[1].menuId + "|" + capturedRequests[1].rows.length, "32|40")
-
     var t = Ops.started(12, true, 3)
     check("a started transfer carries its id, its direction and its count",
           t.id + "/" + t.moving + "/" + t.n + "/" + t.running,
@@ -235,7 +219,6 @@ function run(check) {
           Transfer.head(redoSample) + "/" + redoDone.redo + "/" + redoDone.done,
           "Redoing move 2 of 3/move/2")
     check("progress creates a new sample without changing the prior state", redo.index, 0)
-
     // Rename keeps its captured source and editor until the backend accepts the write.
     function renamePane(cursor, renaming, renamed, viewMode) {
         var p = windowedPane([])
@@ -289,7 +272,6 @@ function run(check) {
     check("menu rename retains its identity for the editor lifetime", menuRename.renameMenuId, 33)
     Ops.commitRename(menuRename, "renamed.txt")
     check("committing retains the captured menu identity", renameIdentity, 33)
-
     var operationIds = []
     var convertedArguments = null
     var menuPane = windowedPane([])
@@ -315,9 +297,7 @@ function run(check) {
     check("conversion sends its captured output directory", convertedArguments.dest.indexOf("/different-directory/"), -1)
     check("conversion keeps its menu identity for the complete dialog lifetime", menuPane.convertSource.menuId, 37)
     check("conversion retains the caller's operation identity", menuPane.convertSource.requestId, 73)
-
     // ---- the new folder, the one operation whose name the backend chooses ----
-
     // No name field at all: src/backend/ops.rs takes the first free "New Folder" when one is
     // omitted, which is what spares this UI a retry loop and any collision handling of its own.
     var madeSent = []
@@ -329,9 +309,7 @@ function run(check) {
     check("a created folder names its own reversal, the way the transfer and trash lines do",
           Ops.made("/d/New Folder"),
           "Created New Folder \u00b7 z undoes")
-
     // ---- the transfer card, ui/TransferCard.qml's own model ----
-
     // The operator's design artifact draws the count with no name in it, because the file under way
     // gets a row of its own underneath.
     check("the card headline is the count alone",
@@ -344,7 +322,6 @@ function run(check) {
     check("the status line is that headline plus the name",
           Ops.progressLine({ moving: false, n: 23, index: 8, name: "panel-demo.mp4" }),
           "Copying 9 of 23 · panel-demo.mp4")
-
     check("the card names the file under way and how big it is",
           Transfer.fileLine({ name: "panel-demo.mp4", total: 48000000 }),
           "panel-demo.mp4 \u00b7 48.0 MB")
@@ -355,7 +332,6 @@ function run(check) {
     check("nothing in flight yet draws no second row at all",
           Transfer.fileLine({ name: "", total: 0 }),
           "")
-
     // The bar is the whole transfer, never the one file: one large file is then its own byte bar.
     check("one file half copied fills half the bar",
           Transfer.fraction({ n: 1, done: 0, bytes: 24000000, total: 48000000 }),
@@ -383,9 +359,6 @@ function run(check) {
     check("and it keeps the id the cancel button has to name",
           flight.id + " " + flight.running,
           "12 true")
-    // The wire rebuilds the transfer on every sample, so a field it forgets to name is gone from
-    // the first progress update onward. This one is the whole point of the classification: it
-    // survived `started` and vanished the moment bytes began arriving.
     var remote = Transfer.sampled(Ops.started(13, false, 2, "remote-to-remote"), 0, "photo.heic", 1, 2)
     check("a sample keeps the transfer remote-to-remote",
           Ops.progressLine(remote),

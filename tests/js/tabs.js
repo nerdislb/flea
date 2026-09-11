@@ -1,6 +1,5 @@
 .import "../../ui/js/Selection.js" as Selection
 .import "../../ui/js/Tabs.js" as Tabs
-
 function pane(path) {
     var p = {
         path: path || "/home/gm/Work",
@@ -43,7 +42,6 @@ function pane(path) {
     }
     return p
 }
-
 function run(check) {
     // A search sets pane.path to the scope it walks and keeps the origin in searchFrom, which
     // dropOverlay clears. openNew is driven whole rather than restingPath alone, because the defect
@@ -59,10 +57,6 @@ function run(check) {
     check("and the pane lands on the path the tab records", searching.path, "/home/gm/Work")
     check("carrying no cursor from the search's own listing", searching.tabs.items[1].cursorIndex, 0)
     check("and no selection from it either", searching.tabs.items[1].selected.length, 0)
-
-    // A search begun in home walks home, so the scope IS where the user was: dropOverlay cleared the
-    // search and the path test found nothing to re-list, and the walk's rows stayed up under the new
-    // tab's ordinary header, with the watch dropped for the search so nothing ever refreshed them.
     var scoped = pane("/home/gm")
     scoped.searchMode = "results"
     scoped.searchFrom = "/home/gm"
@@ -88,11 +82,9 @@ function run(check) {
                      index: 1, pendingCursor: -1, pendingSortBy: "", pendingSortDesc: false }
     Tabs.closeAt(closing, 1)
     check("and so does closing a searching tab onto one", closing.listed.join(","), "/home/gm")
-
     var plain = pane("/tmp/here")
     Tabs.openNew(plain)
     check("an ordinary listing opens its tab on its own path", plain.tabs.items[1].path, "/tmp/here")
-
     // The cursor is clamped when a listing arrives and the selection was not, so a row past the end
     // of a directory that shrank while the tab was hidden was selected anyway.
     var shrunk = { total: 3, selectionVersion: 0, toggled: [], clearSelection: function () {} }
@@ -105,7 +97,6 @@ function run(check) {
     Tabs.restoreSelection(none, [1, 2])
     check("and a restore that kept nothing does not announce a selection change",
           none.toggled.length + "|" + none.selectionVersion, "0|5")
-
     // The clamp alone was not enough: a row deleted BELOW a kept index leaves that index in range
     // and naming a different file, which trash would then act on. A switch that re-lists carries no
     // selection at all now, and the re-list's own reset is what clears it.
@@ -118,11 +109,6 @@ function run(check) {
     check("a switch that re-lists asks for no selection to be restored",
           moved.tabs.pendingSelected === undefined, true)
     check("and it did re-list, which is what clears the selection", moved.listed.join(","), "/tmp/b")
-
-    // The same directory in two tabs is the one switch that re-lists nothing, and the selection was
-    // restored on the strength of that alone. Two things renumber the rows underneath a hidden tab:
-    // the other tab holding a different order, and a re-read, a dd in the other tab or the watch's
-    // own, while it was hidden. Backend.listRequests counts the second; the sort is the first.
     function twin(order) {
         var p = pane("/tmp/same")
         p.backend.listRequests = 7
@@ -151,7 +137,6 @@ function run(check) {
           reordered.selectedIndices().join(",") + "|" + reordered.sorted.join(","), "|size:false")
     check("and the caches keyed by row index with it",
           typeof reordered.thumbState === "string" || typeof reordered.dirSizeState === "string", false)
-
     // F3 and F4: a refusal and a background close must each cost the user nothing else.
     var full = pane("/tmp/full")
     var nine = []
@@ -166,7 +151,6 @@ function run(check) {
     check("and leaves the preview open", full.preview.active, true)
     check("and does not cancel the running search", full.searchRunning, true)
     check("and the search itself is still standing", full.searchMode, "results")
-
     // selectAt got the same read-before-dropOverlay hoist, and nothing drove it from a search.
     var leaving = pane("/")
     leaving.searchMode = "results"
@@ -178,7 +162,6 @@ function run(check) {
     Tabs.selectAt(leaving, 0)
     check("the tab left behind during a search records where the user was",
           leaving.tabs.items[1].path, "/home/gm/Work")
-
     var many = pane("/tmp/one")
     many.tabs = { items: [{ path: "/tmp/one" }, { path: "/tmp/two" }, { path: "/tmp/three" }],
                   index: 0, pendingCursor: -1, pendingSelected: null,
@@ -187,7 +170,6 @@ function run(check) {
     Tabs.closeAt(many, 2)
     check("closing a background tab leaves the current tab's preview alone", many.preview.active, true)
     check("and still removes it", Tabs.count(many), 2)
-
     // The strip's binding reads these four by name rather than through the pane, so a comma
     // expression is not needed to make a label re-read when a tab opens; qmllint flagged that.
     var items = [{ path: "/home/gm" }, { path: "/tmp/one" }]
@@ -197,33 +179,27 @@ function run(check) {
           Tabs.pathAt({ items: items, index: 1 }, 1, 0, "/tmp/moved"), "/home/gm")
     check("no tabs at all still answers a string",
           Tabs.pathAt(null, 0, 3, "/home/gm"), "")
-
     check("a root tab is labelled with its separator", Tabs.label("/", ""), "/")
     check("the home directory uses the rail's own Home label", Tabs.label("/home/gm", "/home/gm"), "Home")
     check("a home child is labelled with its leaf, not the tilde form",
           Tabs.label("/home/gm/Work", "/home/gm"), "Work")
     check("one pane with no tab state still counts as one tab", Tabs.count(pane()), 1)
-
     var born = pane()
     Tabs.act("tabNew", born)
     check("t seeds the current folder and opens a second tab on it", Tabs.count(born), 2)
     check("and lands on the new tab", Tabs.currentIndex(born), 1)
     check("and does not re-list, because both tabs name the same directory", born.listed.length, 0)
-
     born.path = "/home/gm/Downloads"
     check("a navigate updates the current tab's label without a switch",
           Tabs.labelAt(born, 1), "Downloads")
     check("and leaves the other tab's snapshot alone", Tabs.labelAt(born, 0), "Work")
-
     Tabs.act("tab1", born)
     check("1 switches to the first tab", Tabs.currentIndex(born), 0)
     check("and lists the snapshot path, because it is a different directory",
           born.listed.join(","), "/home/gm/Work")
     check("and keeps the cursor to restore after rows arrive", born.tabs.pendingCursor, 4)
-
     Tabs.applyPending(born)
     check("the pending cursor lands once rows arrive", born.cursorIndex, 4)
-
     var cycling = pane("/tmp/first")
     Tabs.openNew(cycling)
     cycling.path = "/tmp/second"
@@ -261,7 +237,6 @@ function run(check) {
     check("both cycle directions retain tab ownership while a listing is loading", cycling.tabs === heldTabs, true)
     check("both loading refusals explain why the key did not switch",
           cycling.said.join("|"), "A directory is already loading.|A directory is already loading.")
-
     var single = pane("/tmp/only")
     single.preview.active = true
     single.filterQuery = "keep"
@@ -272,42 +247,35 @@ function run(check) {
     check("cycling the only tab preserves its preview, filter, cursor and selection",
           single.preview.active + "|" + single.filterQuery + "|" + single.cursorIndex + "|" + single.selectedIndices().join(","),
           "true|keep|4|2")
-
     var missing = pane()
     Tabs.act("tab3", missing)
     check("a digit with no such tab says so in words", missing.said.join(""), "No tab 3.")
-
     var last = pane()
     Tabs.act("tabClose", last)
     check("w on the only tab refuses rather than closing the window",
           last.said.join(""), "Can't close the last tab.")
-
     var pair = pane("/home/gm/a")
     Tabs.act("tabNew", pair)
     pair.path = "/home/gm/b"
     Tabs.act("tabClose", pair)
     check("w on a second tab leaves one", Tabs.count(pair), 1)
     check("and lists the tab that remains", pair.listed.join(","), "/home/gm/a")
-
     var capped = pane()
     var n
     for (n = 0; n < 12; n++)
         Tabs.act("tabNew", capped)
     check("the ninth tab is the last one t will open", Tabs.count(capped), 9)
     check("and the tenth says so", capped.said[capped.said.length - 1], "Nine tabs is the most.")
-
     var loading = pane()
     loading.listInFlight = true
     Tabs.act("tabNew", loading)
     check("t while a listing is in flight uses the same sentence navigation does",
           loading.said.join(""), "A directory is already loading.")
-
     var previewing = pane()
     previewing.preview.active = true
     Tabs.act("tabNew", previewing)
     check("t closes an open preview, so the new tab is not sitting under one",
           previewing.preview.closed, 1)
-
     var pending = pane("/home/gm/a")
     pending.tabs = {
         items: [],
@@ -322,10 +290,6 @@ function run(check) {
           pending.sorted.join(",") + "|" + pending.cursorIndex, "size:true|4")
     Tabs.applyPending(pending)
     check("the next rows reply restores the cursor", pending.cursorIndex, 9)
-
-    // A switch that re-lists records the tab's order as pending, and a fresh listing is already name
-    // ascending, which is the order most tabs record: left pending because it matched, it reverted
-    // the user's next sort on the rows reply that answered it, and only the second press stuck.
     var settled = pane("/home/gm/a")
     Tabs.act("tabNew", settled)
     settled.path = "/home/gm/b"

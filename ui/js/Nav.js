@@ -70,9 +70,6 @@ function mouseBack(pane) {
 }
 
 // Everything a fresh listing has to forget. Called by open, by refresh and by the hidden toggle, so
-// the reset is written once and no caller can half-do it. A refresh passes keep, which leaves the
-// rows, their count and the cursor standing until the new ones land, so nothing paints an empty
-// frame. Anything indexed by row is still forgotten: the rows about to arrive are numbered differently.
 function openWithoutHistory(pane, newPath, keep) {
     if (pane.listInFlight) {
         pane.message("A directory is already loading.", false)
@@ -87,7 +84,6 @@ function openWithoutHistory(pane, newPath, keep) {
         pane.rows = []
         pane.kindNames = []
         pane.cursorIndex = 0
-        // A navigation is not a re-read, so a cursor a failed refresh left pending must not land here.
         pane.pendingCursor = -1
     }
     pane.thumbState = Thumbs.empty()
@@ -121,9 +117,6 @@ function renameRefreshTarget(pane, path) {
 }
 
 // An operation changed the directory under the listing, so it is read again. Passing the path the
-// operation produced re-selects that row through pendingSelect; passing nothing keeps the cursor on
-// the index it held, which after a trash is the row that shifted up into the removed one's place,
-// the row vim's dd lands on. It is not a navigation, so it never touches the history.
 function refresh(pane, selectPath) {
     pane.pendingSelect = selectPath ? selectPath : ""
     pane.pendingCursor = selectPath ? -1 : pane.cursorIndex
@@ -185,7 +178,6 @@ function applyAnchor(pane, anchor) {
 
 // Only the first rows response looks for the target, then it is forgotten either way, so a later
 // directory change never re-reveals it. The target is a full path, which is what --select carries.
-// A pending cursor is applied the same way, clamped to the listing that came back: trashing the last
 // row leaves the cursor on the new last row rather than one past the end.
 function applyPendingSelect(pane) {
     if (pane.pendingCursor >= 0) {

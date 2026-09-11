@@ -1,5 +1,4 @@
 .pragma library
-
 .import "Archive.js" as Archive
 .import "Convert.js" as Convert
 .import "Filter.js" as Filter
@@ -20,15 +19,12 @@ function clearPendingKind(pane, where) { if (where === "transfer") pane.pendingT
 function items(n) {
     return n + (n === 1 ? " item" : " items")
 }
-
 // A finished operation names its own reversal, which is why none of them needs a confirmation step.
 var UNDO_HINT = " · z undoes"
-
 function started(id, moving, n, kind) {
     return { id: id, moving: moving, n: n, index: 0, name: "", running: true,
              done: 0, bytes: 0, total: 0, kind: kind || "local" }
 }
-
 // The count comes from the card's headline so both surfaces name the same progress sample.
 function progressLine(t) {
     var head = Transfer.head(t)
@@ -90,8 +86,6 @@ function copied(n, moving) {
     return (moving ? "Cut " : "Copied ") + items(n) + ", p pastes."
 }
 
-// Which rows an operation acts on: the selection when there is one, else the cursor row while the
-// filter shows it, and nothing otherwise, since the selection has already lost every hidden row.
 function targetIndices(pane) {
     var picked = pane.selectedIndices()
     return picked.length > 0 ? picked : Filter.cursorShown(pane) ? [pane.cursorIndex] : []
@@ -173,7 +167,6 @@ function trash(pane, menuId) {
     if (idx.length === 0) {
         return
     }
-    // The reply lands the cursor on this row: the one asked for, not wherever the cursor is by then.
     pane.trashedFirst = idx[0]
     pane.backend.trash(idx, menuId)
 }
