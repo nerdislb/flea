@@ -389,17 +389,17 @@ function run(check) {
     var remote = Transfer.sampled(Ops.started(13, false, 2, "remote-to-remote"), 0, "photo.heic", 1, 2)
     check("a sample keeps the transfer remote-to-remote",
           Ops.progressLine(remote),
-          "Copying between remote hosts 1 of 2, photo.heic")
+          "Copying between remote hosts 1 of 2 · photo.heic")
     check("and so does the item line that ends it",
           Ops.progressLine(Transfer.itemDone(remote, 0, "photo.heic")),
-          "Copying between remote hosts 1 of 2, photo.heic")
+          "Copying between remote hosts 1 of 2 · photo.heic")
     var remoteMove = Transfer.sampled(Ops.started(14, true, 2, "remote-to-remote"), 0, "photo.heic", 1, 2)
     check("a sampled remote move keeps its verb too",
           Ops.progressLine(remoteMove),
-          "Moving between remote hosts 1 of 2, photo.heic")
+          "Moving between remote hosts 1 of 2 · photo.heic")
     check("a local transfer is still worded plainly through a sample",
           Ops.progressLine(Transfer.sampled(Ops.started(15, false, 2), 0, "photo.heic", 1, 2)),
-          "Copying 1 of 2, photo.heic")
+          "Copying 1 of 2 · photo.heic")
 
     var landed = Transfer.itemDone(flight, 8, "panel-demo.mp4")
     check("an item's own terminal line counts it whole and spends its byte sample",

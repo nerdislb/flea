@@ -103,6 +103,7 @@ fn jpeg_in<R: Read + Seek>(r: &mut R) -> Option<(u32, u32)> {
             return None;
         }
         if is_frame(marker) {
+            if len < 7 { return None; }
             let mut sof = [0u8; 5];
             r.read_exact(&mut sof).ok()?;
             return Some((be16(&sof, 3)?, be16(&sof, 1)?));
