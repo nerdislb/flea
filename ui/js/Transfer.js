@@ -7,6 +7,10 @@
 
 // The byte sample for the item in flight. done is the count already finished, so it stays where it
 // was: a sample fills the item in, it does not complete it.
+//
+// Every field is restated here rather than copied, so a field added to the transfer is dropped the
+// moment the first sample lands unless it is named. `kind` was: the transfer started as
+// remote-to-remote, and reverted to generic wording on its own first progress update.
 function sampled(t, index, name, bytes, total) {
     return Object.assign({}, t, {index: index, name: name, done: index, bytes: bytes, total: total})
 }

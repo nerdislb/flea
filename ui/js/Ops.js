@@ -4,19 +4,18 @@
 .import "Convert.js" as Convert
 .import "Filter.js" as Filter
 .import "Transfer.js" as Transfer
-
+.import "Remote.js" as Remote
 // The clipboard is entirely client-side: the backend knows about a transfer, never about a pending paste.
 function emptyClipboard() {
     return { paths: [], moving: false }
 }
-
 // What the status bar and the card are tracking while a transfer runs; id is what a cancel names.
 // done, bytes and total are the card's bar: the items already finished, and the one in flight.
 function emptyTransfer() {
     return { id: 0, moving: false, n: 0, index: 0, name: "", running: false,
-             done: 0, bytes: 0, total: 0 }
+             done: 0, bytes: 0, total: 0, kind: "local" }
 }
-
+function clearPendingKind(pane, where) { if (where === "transfer") pane.pendingTransferKind = "local" }
 // "1 item" or "4 items", so no caller builds a plural by hand.
 function items(n) {
     return n + (n === 1 ? " item" : " items")
@@ -25,16 +24,18 @@ function items(n) {
 // A finished operation names its own reversal, which is why none of them needs a confirmation step.
 var UNDO_HINT = " · z undoes"
 
-function started(id, moving, n) {
+function started(id, moving, n, kind) {
     return { id: id, moving: moving, n: n, index: 0, name: "", running: true,
-             done: 0, bytes: 0, total: 0 }
+             done: 0, bytes: 0, total: 0, kind: kind || "local" }
 }
 
 // The count comes from the card's headline so both surfaces name the same progress sample.
 function progressLine(t) {
-    return t.name.length > 0 ? Transfer.head(t) + " · " + t.name : Transfer.head(t)
+    var head = Transfer.head(t)
+    if (t.kind === "remote-to-remote")
+        head = Remote.transferPrefix(t.kind, t.moving) + " " + (t.index + 1) + " of " + t.n
+    return t.name.length > 0 ? head + " · " + t.name : head
 }
-
 function transferDone(t, ok, failed, skipped, cancelled) {
     var verb = t.moving ? "Moved " : "Copied "
     var partial = failed > 0 || skipped > 0 || cancelled
@@ -218,13 +219,13 @@ function paste(pane) {
         pane.message("There is nothing to paste; y copies and x cuts.", false)
         return
     }
+    pane.pendingTransferKind = Remote.transferKind(clip.paths, pane.path)
     pane.backend.send({ c: "transfer", op: clip.moving ? "move" : "copy", paths: clip.paths, dest: pane.path })
     // A cut is spent by its paste; a copy stays on the clipboard so it can be pasted again.
     if (clip.moving) {
         pane.clipboard = emptyClipboard()
     }
 }
-
 function undo(pane) {
     pane.backend.undo()
 }

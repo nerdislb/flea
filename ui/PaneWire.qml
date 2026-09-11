@@ -274,7 +274,8 @@ Item {
             root.retryId = 0
             root.retryPaths = []
             root.retrySelectionText = ""
-            pane.transfer = Ops.started(id, moving, n)
+            pane.transfer = Ops.started(id, moving, n, pane.pendingTransferKind)
+            pane.pendingTransferKind = "local"
             pane.sticky(Ops.progressLine(pane.transfer))
         }
 
@@ -415,6 +416,9 @@ Item {
         function onFailed(where, input, message, mode) {
             // A listing that failed cannot seat the row a peeked right click asked for, so its menu intent dies here.
             pane.pendingMenu = false
+            // A refused transfer leaves its classification behind, and the next
+            // one is then labelled with the kind of the one that never ran.
+            Ops.clearPendingKind(pane, where)
             var text = Errors.sentence(where, message)
             var terminal = where === "backend" || where === "read"
             var request = pane.renameRequest
