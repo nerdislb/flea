@@ -30,6 +30,7 @@ import "previewkeys.js" as PreviewKeysSuite
 import "places.js" as PlacesSuite
 import "protocols.js" as ProtocolsSuite
 import "railkeys.js" as RailKeysSuite
+import "ranger.js" as RangerSuite
 import "recent.js" as RecentSuite
 import "renderer.js" as RendererSuite
 import "scroll.js" as ScrollSuite
@@ -78,7 +79,7 @@ Item {
             ["picker", PickerSuite],
             ["previewkeys", PreviewKeysSuite],
             ["protocols", ProtocolsSuite], ["railkeys", RailKeysSuite],
-            ["recent", RecentSuite],
+            ["ranger", RangerSuite], ["recent", RecentSuite],
             ["renderer", RendererSuite],
             ["scroll", ScrollSuite], ["search", SearchSuite],
             ["selection", SelectionSuite], ["settings", SettingsSuite],

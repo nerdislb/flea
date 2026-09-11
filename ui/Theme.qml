@@ -110,6 +110,7 @@ Singleton {
     readonly property int chromeMarkSize: Math.round(Style.font.icon * root.sizeRatio)
     // The boards use one two-unit stroke on the shared 24-unit glyph grid.
     readonly property real strokeWidth: 2
+    readonly property real ruleOpacity: 0.12
     // WCAG 2.5.8 floor. Marks stay at their type-scale size; the hit box grows to this.
     readonly property int hitMin: 24
     // The wheel, see ui/FastScrollHandler.qml: a notch is the platform's lines times notchPx times the

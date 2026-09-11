@@ -629,7 +629,7 @@ FocusScope {
         // view's 1364: the animation jumped a third of the window on a view switch and landed on
         // the divider between the two slots. Over the active column it lands at 1363, so all three
         // views draw it in the same place and none of them draws it on a rule.
-        x: root.listSlot.x + (root.viewMode === "columns" && root.columnsArea ? root.columnsArea.columnWidth : 0)
+        x: root.listSlot.x + (root.viewMode === "columns" && root.columnsArea && root.columnsArea.previousVisible ? root.columnsArea.columnWidth : 0)
         y: root.listSlot.y
         width: root.viewMode === "columns" && root.columnsArea
                ? root.columnsArea.columnWidth : root.listSlot.width
