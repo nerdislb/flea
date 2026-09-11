@@ -12,6 +12,8 @@ Item {
     property var row: null
     property bool cursor: false
     property bool hovered: false
+    // PR #51: keep a hovered filename tip above the following grid row.
+    z: root.hovered || root.renaming ? 1 : 0
     property bool selected: false
     property bool dropTarget: false
     property bool dropCopying: false
