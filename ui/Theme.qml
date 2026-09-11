@@ -13,7 +13,7 @@ import "js/TextSize.js" as TextSize
 Singleton {
     id: root
 
-    readonly property string stateDir: Quickshell.env("HOME") + "/.local/state/omarchy/current"
+    readonly property string stateDir: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/nbshell"
 
     // True only once colors.toml parsed to a palette, so a test can tell one from a fallback.
     property bool ready: false
@@ -308,74 +308,56 @@ Singleton {
         root.reducedMotion = String(body).indexOf('"bool": false') >= 0;
     }
 
-    // blockLoading only gates calls to text()/data(); nothing forced that call before this fix,
-    // so a window could paint one frame against qs.Commons Color's own un-loaded fallback (blue)
-    // before onLoaded ever fired. Component.onCompleted calls text() itself, which blocks the
-    // Singleton's own construction, which runs before any window: colors.toml is applied before
-    // the first frame, and the later onLoaded is a harmless second, idempotent apply.
-    FileView {
-        id: colorsFile
-        path: root.stateDir + "/theme/colors.toml"
-        blockLoading: true
-        printErrors: false
-        onLoaded: root.applyColors(text())
-        onLoadFailed: root.ready = false
-        Component.onCompleted: root.applyColors(colorsFile.text())
+    // Local nbshell integration. Read generated palette data, never execute it.
+    function applyNbshellConfig(body) {
+        try {
+            var config = JSON.parse(body);
+            var size = Math.max(1, Number(config.fontSize) || 14);
+            Color.loadShell("[font]\nbase-size = " + size + "\n");
+            Style.fontFamily = config.font || "JetBrainsMono Nerd Font";
+            Style.resolvedFontFamily = Style.fontFamily;
+            Style.cornerRadius = Number(config.radius) || 0;
+            root.reducedMotion = config.motionProfile === "reduced";
+        } catch (error) {
+            console.warn("Flea: cannot read nbshell configuration:", error);
+        }
     }
 
-    // Color.loadShell refreshes Style's whole token scale, so the type ladder flips with the theme.
-    FileView {
-        id: shellFile
-        path: root.stateDir + "/theme/shell.toml"
-        blockLoading: true
-        printErrors: false
-        onLoaded: Color.loadShell(text())
-        onLoadFailed: Color.loadShell("")
+    function applyNbshellPalette(body) {
+        var values = {};
+        String(body).split("\n").forEach(function(line) {
+            var match = line.match(/^(NB_[A-Z_]+)='(#[0-9a-fA-F]{6})'$/);
+            if (match) values[match[1]] = match[2];
+        });
+        var keys = {background: "NB_BG", foreground: "NB_FG", accent: "NB_ACCENT",
+            red: "NB_RED", muted: "NB_FG_DIM", dark_background: "NB_BG_DARK",
+            cyan: "NB_CYAN", green: "NB_GREEN"};
+        var lines = [];
+        for (var key in keys) {
+            if (values[keys[key]]) lines.push(key + " = " + JSON.stringify(values[keys[key]]));
+        }
+        root.applyColors(lines.join("\n"));
     }
 
-    // omarchy-theme-set rm -rf's and mv's the theme directory, so an inotify watch on a file inside
-    // it dies with the old inode and never fires again. theme.name is rewritten in place after the
-    // swap, which makes it the one event that survives, measured across three consecutive switches.
     FileView {
-        id: themeNameFile
-        path: root.stateDir + "/theme.name"
+        id: configFile
+        path: root.stateDir + "/config.json"
         blockLoading: true
         watchChanges: true
         printErrors: false
-        onFileChanged: {
-            reload();
-            colorsFile.reload();
-            shellFile.reload();
-            // The OEM shell's applyTheme runs this beside the two reloads above, and without it a theme that moves decoration:rounding leaves every corner here on the old value.
-            Style.scheduleRefresh();
-        }
+        onFileChanged: reload()
+        onLoaded: root.applyNbshellConfig(text())
+        Component.onCompleted: root.applyNbshellConfig(text())
     }
 
-    // Read once, not watched: the Display section reports the compositor's scale and Flea owns no
-    // control that could change it, so there is nothing here for a poll to keep in step with.
-    Process {
-        running: true
-        command: ["hyprctl", "monitors", "-j"]
-        stdout: StdioCollector {
-            waitForEnd: true
-            // text is a property on this type and not a function, which every other collector in
-            // this tree already reads that way; calling it throws and the row stays unanswered.
-            onStreamFinished: root.applyMonitorScale(text)
-        }
-    }
-
-    // Flea agrees with the compositor rather than carrying its own switch, the rule the corner
-    // radius already follows; FLEA_REDUCED_MOTION is the test override and skips the ask.
-    // Two forms below look like mistakes and are not: Quickshell.env returns null and not "" for
-    // an unset variable, so the guard is a truthiness test, and StdioCollector text is a property
-    // whose call throws. The query is Commons/Style.qml's own decoration:rounding shape.
-    Process {
-        id: motionQuery
-        running: !Quickshell.env("FLEA_REDUCED_MOTION")
-        command: ["hyprctl", "-j", "getoption", "animations:enabled"]
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: root.applyReducedMotion(text)
-        }
+    FileView {
+        id: paletteFile
+        path: root.stateDir + "/palette.sh"
+        blockLoading: true
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+        onLoaded: root.applyNbshellPalette(text())
+        Component.onCompleted: root.applyNbshellPalette(text())
     }
 }

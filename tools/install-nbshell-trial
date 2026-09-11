@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""Install the local nbshell trial without changing directory or portal defaults."""
+from pathlib import Path
+import os
+import shutil
+import shlex
+import subprocess
+import tempfile
+
+root = Path(__file__).resolve().parents[1]
+home = Path.home()
+data = Path(os.environ.get('XDG_DATA_HOME', home / '.local/share'))
+bin_dir = Path(os.environ.get('XDG_BIN_HOME', home / '.local/bin'))
+binary = root / 'target/release/flea'
+if not binary.is_file():
+    raise SystemExit('Build first: cargo build --release --locked')
+data.mkdir(parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(prefix='.flea-install-', dir=data) as staging:
+    candidate = Path(staging) / 'flea'
+    (candidate / 'bin').mkdir(parents=True)
+    (candidate / 'libexec').mkdir()
+    shutil.copy2(binary, candidate / 'bin/flea')
+    shutil.copytree(root / 'ui', candidate / 'ui', symlinks=True)
+    shutil.copytree(root / 'compat', candidate / 'compat')
+    shutil.copy2(root / 'compat/xdg-terminal-exec', candidate / 'libexec/xdg-terminal-exec')
+    (candidate / 'libexec/xdg-terminal-exec').chmod(0o755)
+    shutil.copy2(root / 'tools/flea-gio-auth', candidate / 'libexec/flea-gio-auth')
+    shutil.copy2(root / 'LICENSE', candidate / 'LICENSE')
+    destination = data / 'flea'
+    previous = data / 'flea.previous'
+    if previous.exists():
+        shutil.rmtree(previous)
+    if destination.exists():
+        destination.rename(previous)
+    candidate.rename(destination)
+bin_dir.mkdir(parents=True, exist_ok=True)
+launcher = bin_dir / 'flea'
+launcher.write_text('#!/bin/sh\n' +
+    'export PATH=' + shlex.quote(str(data / 'flea/libexec')) + ':"$PATH"\n' +
+    'export FLEA_GIO_AUTH=' + shlex.quote(str(data / 'flea/libexec/flea-gio-auth')) + '\n' +
+    'export FLEA_UI=' + shlex.quote(str(data / 'flea/ui')) + '\n' +
+    'export FLEA_BIN=' + shlex.quote(str(data / 'flea/bin/flea')) + '\n' +
+    'exec "$FLEA_BIN" "$@"\n')
+launcher.chmod(0o755)
+applications = data / 'applications'
+applications.mkdir(exist_ok=True)
+entry = (root / 'packaging/com.thisisgm.flea.desktop').read_text()
+# A desktop entry registers an available app; it does not select a default.
+(applications / 'com.thisisgm.flea.desktop').write_text(entry)
+icons = data / 'icons/hicolor/scalable/apps'
+icons.mkdir(parents=True, exist_ok=True)
+shutil.copy2(root / 'packaging/com.thisisgm.flea.svg', icons)
+subprocess.run(['update-desktop-database', str(applications)], check=True)
+print('Installed Flea trial:', launcher)

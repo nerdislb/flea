@@ -1,0 +1,12 @@
+#!/bin/sh
+# Private Flea fallback for nbshell's default terminal.
+if [ -x /usr/bin/xdg-terminal-exec ]; then
+    exec /usr/bin/xdg-terminal-exec "$@"
+fi
+if [ "$#" = 1 ]; then
+    case "$1" in
+        --dir=*) exec ghostty --working-directory="${1#--dir=}" ;;
+    esac
+fi
+printf '%s\n' 'Flea terminal fallback expects one --dir= argument.' >&2
+exit 2
