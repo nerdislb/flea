@@ -312,7 +312,7 @@ Singleton {
     // Local nbshell integration. Read generated palette data, never execute it.
     function applyNbshellConfig(body) {
         try {
-            var config = JSON.parse(body);
+            var config = JSON.parse(body || "{}");
             var size = Math.max(1, Number(config.fontSize) || 14);
             Color.loadShell("[font]\nbase-size = " + size + "\n");
             Style.fontFamily = config.font || "JetBrainsMono Nerd Font";
