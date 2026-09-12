@@ -325,6 +325,15 @@ function viewRows(state) {
         { kind: "check", id: "hidden", label: "Show hidden files", glyph: "eye", on: data.hidden === true },
         { kind: "group", label: "Cursor" },
         { kind: "check", id: "wrapAtEnds", label: "Wrap at list ends", caption: "arrow-up at the top", glyph: "arrow-up", on: data.wrapAtEnds === true },
+        { kind: "group", label: "Opening" },
+        choice("startIn", "Flea opens in", "house", ["home", "last", "folder"],
+               ["Home", "Last folder", "Chosen folder"], data.startIn || "home"),
+        // The action writes the folder the panel was opened over and selects the mode with it, so the
+        // row above never names a chosen folder that was never chosen. The value is the path itself.
+        { kind: "action", id: "startFolder", label: "Chosen folder", glyph: "folder", indented: true,
+          value: data.startFolder || "Use this folder" },
+        choice("newTab", "New tabs open in", "columns", ["current", "home", "start"],
+               ["Current folder", "Home", "Start folder"], data.newTab || "current"),
         { kind: "hint", footer: true, label: state.saveStatus || "Saved · applied in this process",
           role: (state.saveStatus || "").indexOf("Could not") === 0 ? "error" : "accent" }
     ]
@@ -404,5 +413,11 @@ function placesRows(state) {
     rows.push({ kind: "check", id: "places.trashCount", label: "Show Trash count", glyph: "trash", on: data.trashCount === true })
     rows.push(choice("places.sidebarWidth", "Sidebar width", "maximize", Places.WIDTH_STOPS,
         ["160 px", "192 px", "224 px", "256 px"], Places.sidebarWidth(data.sidebarWidth)))
+    // Trash lives in Places, and the sweep is off until switched on: permanent deletion is outside the undo journal.
+    rows.push({ kind: "group", label: "Trash" })
+    // The eyebrow says TRASH, so the label does not repeat it; a fuller one elided the caption to "permanently, once a...".
+    rows.push({ kind: "check", id: "trashAutoEmpty", label: "Empty after 30 days",
+        caption: "permanently", glyph: "history",
+        on: (state.data || {}).trashAutoEmpty === true })
     return rows
 }

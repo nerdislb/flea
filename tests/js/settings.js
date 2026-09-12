@@ -276,7 +276,16 @@ function runCompletionRows(check) {
     var places = Settings.rows("places", {})
     check("Places spells the manager group Favorites", places[0].label, "Favorites")
     check("optional rail details default off", [find(places, "places.driveSize").on, find(places, "places.trashCount").on].join(","), "false,false")
-    check("the Rail controls follow the ruled order", places.slice(-3).map(function (row) { return row.label }).join("|"), "Show drive size|Show Trash count|Sidebar width")
+    check("the Rail controls follow the ruled order", places.slice(-5, -2).map(function (row) { return row.label }).join("|"), "Show drive size|Show Trash count|Sidebar width")
+    // The 30 day sweep's own row, at the foot of Places under its own eyebrow. Off unless ui.json
+    // says otherwise, which is the whole of GM's opt-in ruling as the panel sees it.
+    check("Places ends with the Trash group and its one row",
+          places.slice(-2).map(function (row) { return row.label }).join("|"),
+          "Trash|Empty after 30 days")
+    check("the sweep is off on a fresh install", find(places, "trashAutoEmpty").on, false)
+    check("and says what it does and how often", find(places, "trashAutoEmpty").caption, "permanently")
+    check("a ui.json that switched it on reads back on",
+          find(Settings.rows("places", { data: { trashAutoEmpty: true } }), "trashAutoEmpty").on, true)
     var detailedPlaces = Settings.rows("places", { data: { places: { driveSize: true, trashCount: true } } })
     check("both rail detail controls reflect persisted on values", [find(detailedPlaces, "places.driveSize").on, find(detailedPlaces, "places.trashCount").on].join(","), "true,true")
     var state = { data: { view: "grid", density: "compact", columns: ["name", "kind"],
@@ -290,6 +299,22 @@ function runCompletionRows(check) {
     check("grouping explains the categories before it is enabled", find(view, "groupByKind").caption, "folders, photos, files")
     check("wrapping explains the boundary before it is enabled", find(view, "wrapAtEnds").caption, "arrow-up at the top")
     check("save feedback is a separate footer", view[view.length - 1].footer, true)
+
+    // Settings > View > Opening, which is where a window and a new tab begin. ui/js/Startup.js turns
+    // the values into a path and tests/js/startup.js drives that; this is only what the panel draws.
+    var opening = Settings.rows("view", {})
+    check("Opening defaults to home", find(opening, "startIn").selected, "home")
+    check("and its three values are the ones the schema allows",
+          find(opening, "startIn").values.join(","), "home,last,folder")
+    check("a chosen folder that was never chosen invites the operator to pick one",
+          find(opening, "startFolder").value, "Use this folder")
+    check("new tabs default to the folder the pane is on", find(opening, "newTab").selected, "current")
+    check("and the tab values are the schema's own",
+          find(opening, "newTab").values.join(","), "current,home,start")
+    var opened = Settings.rows("view", { data: { startIn: "folder", startFolder: "/home/gm/Work", newTab: "home" } })
+    check("a chosen folder is named by its own path", find(opened, "startFolder").value, "/home/gm/Work")
+    check("and the mode beside it reads back", find(opened, "startIn").selected, "folder")
+    check("the tab setting reads back too", find(opened, "newTab").selected, "home")
     check("the save failure keeps its message and error role",
           Settings.rows("view", { saveStatus: "Could not save settings" }).slice(-1).map(function (row) {
               return row.label + "|" + row.role + "|" + row.footer

@@ -240,9 +240,9 @@ function run(check) {
     check("m raises the menu while the rail has focus", Focus.lookup(m, railPane()), "menu")
     check("m raises the menu in the list too, so the row menu has a key", Focus.lookup(m, pane(closed())), "menu")
 
-    // Finder's Cmd+K with Cmd read as Ctrl opens the dialog from either view; the bare a stays a rail
-    // key, because in the list the letter is not bound at all. Ctrl+K is the Mac preset's own chord,
-    // so the preset is named here rather than assumed: the map opens on Default, which claims none.
+    // Ctrl+K opens the dialog from either view, and so does the bare a: keys.toml promised "either the
+    // list or the rail" from the first commit while Focus.js made it rail-only (GM, 2026-09-11).
+    // Ctrl+K is the Mac preset's chord, so the preset is named rather than assumed.
     var ctrl = Qt.ControlModifier
     Keymap.setPreset("mac")
     check("ctrl k connects to a server from the list", Focus.lookup(key(Qt.Key_K, "\u000b", ctrl), pane(closed())), "addNetwork")
@@ -255,7 +255,7 @@ function run(check) {
         check(preset + " Grid PDF Right keeps page navigation", Focus.lookup(right, pane(pdfOpen(), "grid")), "seekForward")
     }
     Keymap.setPreset("default")
-    check("bare a is still nothing in the list", Focus.lookup(key(Qt.Key_A, "a", none), pane(closed())), "")
+    check("bare a adds a network place from the list too", Focus.lookup(key(Qt.Key_A, "a", none), pane(closed())), "addNetwork")
     var dialled = listPane(true)
     dialled.sidebar = { asked: 0, addRequested: function () { this.asked += 1 } }
     Focus.act("addNetwork", dialled)
@@ -287,7 +287,7 @@ function run(check) {
     // Finder's Cmd+E in a listing: the removable volume the listing is inside, whose verdict is
     // Mounts.railMenu's, released through the same releaseChosen a chosen menu row takes. The rail's
     // own half of the key is ui/js/RailKeys.js's, and tests/js/railkeys.js drives it.
-    var stick = { label: "128GB", group: "device", kind: "volume", device: "/dev/sda1", path: "/run/media/user/128GB", mounted: true }
+    var stick = { label: "128GB", group: "device", kind: "volume", device: "/dev/sda1", path: "/run/media/user/128GB", mounted: true, removable: true }
     var inside = ejectPane("list", "/run/media/user/128GB/photos", [home, stick], 0)
     Focus.act("eject", inside)
     check("ctrl e in a listing inside the volume ejects that volume, whatever the rail cursor is on",

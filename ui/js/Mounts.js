@@ -95,113 +95,6 @@ function railLabel(mount, marks) {
     return mount.label
 }
 
-// Sample lsblk --bytes --json row: {"name":"sda1","label":"128GB","mountpoint":"/run/media/gm/128GB","rm":true,"size":124656812032,"type":"part","model":null}.
-// Two row kinds come out: one "disk" row for the box's own internal disk, then one "volume" row
-// per removable partition, mounted or not, plus an internal partition automounted under
-// /run/media/<user> or unmounted with nothing stacked on it. ui/DeviceMounts.qml turns these
-// into rail entries.
-function parseDevices(body, home) {
-    var tree
-    try {
-        tree = JSON.parse(String(body || ""))
-    } catch (e) {
-        // A parse failure returns the empty shape rather than throwing, so the rail self-hides.
-        return []
-    }
-    var nodes = (tree && tree.blockdevices) || []
-    var out = []
-    var disk = internalDisk(nodes)
-    if (disk)
-        out.push(disk)
-    collectVolumes(nodes, "", false, userMedia(home), out)
-    return out
-}
-
-// corner: one internal disk on this box, so the first non-external disk is "the" disk and its row means "/".
-// Externality is isExternal's, not RM's alone: USB bridges (a WD My Passport reports rm=false,
-// tran=usb) must never win the internal row.
-function internalDisk(nodes) {
-    for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i]
-        // lsblk on this box reports rm as a JSON boolean, measured 2026-09-02.
-        if (!n.name || n.type !== "disk" || isExternal(n))
-            continue
-        // zram and loop devices are type "disk" too, and neither is a disk anyone browses.
-        if (/^(zram|loop)/.test(String(n.name)))
-            continue
-        return { kind: "disk", label: String(n.name), device: "/dev/" + n.name, path: "/", mounted: true, size: deviceBytes(n.size) }
-    }
-    return null
-}
-
-// A node is external when removable or USB-attached. RM alone misses USB bridges: a WD My Passport
-// reports rm=false with tran=usb over subsystems=block:scsi:usb:pci, while its partition carries
-// tran=null, so collectVolumes inherits the parent's answer the way it inherits the model.
-// Bare hotplug is deliberately no signal: hot-swap SATA and eSATA internals report it too.
-function isExternal(n) {
-    if (!n)
-        return false
-    if (n.rm)
-        return true
-    if (String(n.tran || "").toLowerCase() === "usb")
-        return true
-    var subs = String(n.subsystems || "").toLowerCase()
-    if (/(^|:)(usb)(:|$)/.test(subs))
-        return true
-    return false
-}
-
-// A removable row is a partition on a removable disk, or a removable disk nobody ever partitioned.
-function collectVolumes(nodes, model, removable, media, out) {
-    for (var i = 0; i < nodes.length; i++) {
-        var n = nodes[i]
-        var kids = n.children || []
-        // Only the disk carries a product name, so it is passed down to its own partitions.
-        var own = n.model ? String(n.model) : model
-        // Newer lsblk reports rm per partition, so a stick's own children can read false while
-        // the disk reads true; the parent's answer covers them the way tran=null already needed.
-        var here = removable || isExternal(n)
-        if (n.name && (n.type === "part" || (n.type === "disk" && kids.length === 0))) {
-            if (here)
-                out.push(volumeRow(n, own, true))
-            else if (isInternalVolume(n, kids, media))
-                out.push(volumeRow(n, own, false))
-        }
-        collectVolumes(kids, own, here, media, out)
-    }
-}
-
-// An internal partition is a Devices row when the user can open it: automounted under
-// /run/media/<user> by udisks2, which is the Nautilus left-sidebar shape, or unmounted with
-// nothing stacked on top of it. A container with children (LUKS, LVM) is never opened itself,
-// and a system mount anywhere else (/boot, swap) stays off the rail.
-function isInternalVolume(n, kids, media) {
-    var path = n.mountpoint ? String(n.mountpoint) : ""
-    if (path.length > 0)
-        return media.length > 0 && path.indexOf(media) === 0
-    return kids.length === 0 && n.type === "part"
-}
-
-// The udisks2 automount prefix of this session, so one user's media never lists another's.
-// Empty when the home is unknown, and then no internal mount qualifies.
-function userMedia(home) {
-    var cut = String(home || "").lastIndexOf("/")
-    var user = cut < 0 ? String(home || "") : String(home || "").substring(cut + 1)
-    return user.length > 0 ? "/run/media/" + user + "/" : ""
-}
-
-// The label ladder is the filesystem label, then the drive's product name, then the kernel name.
-function volumeRow(n, model, removable) {
-    var path = n.mountpoint ? String(n.mountpoint) : ""
-    var label = n.label ? String(n.label) : (model.length > 0 ? model : String(n.name))
-    return { kind: "volume", label: label, device: "/dev/" + n.name, path: path, mounted: path.length > 0, size: deviceBytes(n.size), removable: !!removable }
-}
-
-// An unavailable or malformed capacity stays absent; only the delegate formats valid byte counts.
-function deviceBytes(value) {
-    return Number.isSafeInteger(value) && value >= 0 ? value : null
-}
-
 // Sample input: two arrays of rail entries as ui/NetworkMounts.qml and ui/DeviceMounts.qml build
 // them, [{path:"", label:"NAS", group:"network", kind:"share", uri:"smb://example.com/data",
 // mounted:false, glyph:"server"}]. A poll that found no change must not assign a fresh array: the
@@ -220,20 +113,22 @@ function sameEntries(a, b) {
 // The two shapes differ only in uri against device, and an absent field is undefined on both sides.
 function sameEntry(x, y) {
     return x.path === y.path && x.label === y.label && x.group === y.group && x.kind === y.kind
-        && x.uri === y.uri && x.device === y.device && x.mounted === y.mounted && x.glyph === y.glyph && x.size === y.size && x.editable === y.editable
-        && x.removable === y.removable
+        && x.uri === y.uri && x.device === y.device && x.mounted === y.mounted && x.glyph === y.glyph
+        && x.size === y.size && x.editable === y.editable && x.removable === y.removable
 }
 
 // Sample input: one rail entry as ui/DeviceMounts.qml and ui/NetworkMounts.qml build them,
-// {label:"128GB", group:"device", kind:"volume", device:"/dev/sda1", mounted:true}.
+// {label:"128GB", group:"device", kind:"volume", device:"/dev/sda1", mounted:true, removable:true}.
 // A removable volume ejects and a mounted network share unmounts; every other rail row offers
 // neither and opens no menu. The kind is read here, never re-derived: the internal disk reads as
 // mounted too, the Dropbox row is a local folder the stock service owns, and a favourite is not a
 // mount. gio's -f is offered nowhere: forcing an unmount over an open write is how data is lost.
+// An internal drive is a volume row as well now, and it is the removable flag that keeps Eject off
+// it: a fixed disk is somewhere to browse, not something to pull out.
 function railMenu(entry) {
     if (!entry || !entry.mounted)
         return []
-    if (entry.group === "device" && entry.kind === "volume" && entry.removable !== false)
+    if (entry.group === "device" && entry.kind === "volume" && entry.removable === true)
         return [{ label: "Eject", action: "eject", glyph: "eject" }]
     if (entry.group === "network" && entry.kind === "share")
         return [{ label: "Unmount", action: "unmount", glyph: "eject" }]

@@ -36,7 +36,10 @@ FocusScope {
     property bool showHidden: ViewState.state.hidden === true
     // Issue 27's state-file key: with it on a cursor step past an end comes round; ui/js/Focus.js step is the only reader.
     readonly property bool wrapAtEnds: ViewState.state.wrapAtEnds === true
-    // When the first d of the dd pair landed; ui/js/Focus.js reads it, Nav's reset clears it, and the rows it names tint until the clock below runs out.
+    // ui/js/Tabs.js is a .pragma library and cannot reach a QML singleton, so the state it asks
+    // ui/js/Startup.js about rides in through the pane, the way every other setting it reads does.
+    readonly property var uiState: ViewState.state
+    // When the first d of the dd pair landed; ui/js/Focus.js reads it and Nav's reset clears it.
     property double trashArmedAt: 0
     // The first index a trash request went out with, or -1; ui/js/Ops.js writes it and onTrashed in ui/PaneWire.qml reads it once, so a cursor moved while the backend worked does not decide where it lands.
     property int trashedFirst: -1

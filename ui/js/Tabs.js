@@ -4,6 +4,7 @@
 .import "Filter.js" as Filter
 .import "Format.js" as Format
 .import "Thumbs.js" as Thumbs
+.import "Startup.js" as Startup
 
 // Hidden tabs are snapshots, so the pane and backend still own only one listing.
 // The nine-tab cap matches TUI's direct digit selection; GUI shortcuts cycle through the same state.
@@ -220,16 +221,16 @@ function openNew(pane) {
     var here = restingPath(pane)
     closePreview(pane)
     var searched = dropOverlay(pane)
+    var target = Startup.newTabPath(pane.uiState, here, pane.home)
     var items = currentItems(pane, here)
     var index = currentIndex(pane)
     items[index] = snapshot(pane, here)
-    items.push(snapshot(pane, here))
+    items.push(snapshot(pane, target))
     pane.tabs = pack(items, items.length - 1)
     // dropOverlay clears the search but leaves the pane on the scope it walked, so the new tab has
-    // to land on the path it just recorded; this is what Escape out of a search already does. A
-    // walk scoped to that same path leaves its rows on the pane, so it is re-listed as well.
-    if (pane.path !== here || searched)
-        pane.openWithoutHistory(here)
+    // to land on the path it just recorded; this is what Escape out of a search already does.
+    if (pane.path !== target || searched)
+        pane.openWithoutHistory(target)
 }
 
 function selectAt(pane, i) {
@@ -279,7 +280,6 @@ function closeAt(pane, i) {
         pane.tabs = pack(items, next)
     }
 }
-
 function act(action, pane) {
     if (action === "tabNext" || action === "tabPrevious") {
         var total = count(pane)

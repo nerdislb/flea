@@ -38,14 +38,17 @@ fi
 # The singleton and the four libraries it imports are copied rather than imported: importing ui/ as
 # a directory makes Quickshell scan every file in it and warn about the two OEM symlinks this test
 # has no session for. Commons is one of those two, and ViewState reads Omarchy's own base size from
-# it, so this root gets that link alone rather than the whole directory.
+# it, so this root gets our pinned compatibility module, not a global Omarchy installation.
 sandbox_make "$SANDBOX" || exit 1
 mkdir -p "$QMLDIR/js" || exit 1
 cp ui/ViewState.qml "$QMLDIR/ViewState.qml" || exit 1
-for lib in UiState Settings TextSize Keymap; do
+# The transitive set, not just what ViewState.qml names: Settings.js imports Places.js, which
+# imports Mounts.js, which imports Protocols.js. Copying only the four ViewState names left the
+# singleton unloadable, so every probe below printed nothing and every check read it as a failure.
+for lib in UiState Settings TextSize Keymap Places Mounts Protocols; do
   cp "ui/js/$lib.js" "$QMLDIR/js/$lib.js" || exit 1
 done
-ln -sfn /usr/share/omarchy/shell/Commons "$QMLDIR/Commons" || exit 1
+ln -sfn "$PWD/compat/Commons" "$QMLDIR/Commons" || exit 1
 printf 'module flea\nsingleton ViewState 1.0 ViewState.qml\n' > "$QMLDIR/qmldir" || exit 1
 
 cat > "$QMLDIR/probe.qml" <<'QML'

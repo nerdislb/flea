@@ -254,7 +254,6 @@ function run(check) {
           Nav.renameRefreshTarget(clicked, "/d/new.txt"), "")
     check("and the flag is one shot, so the next rename reveals again",
           Nav.renameRefreshTarget(clicked, "/d/new.txt"), "/d/new.txt")
-
     // The operator's 0.1.4 ruling: Enter on an archive opens Flea's own view rather than handing the
     // file to this box's default for every archive type it can name, which is Nautilus.
     check("Enter on an archive opens Flea's own preview and launches nothing",
@@ -275,7 +274,6 @@ function run(check) {
     check("h opens the parent directory", up.opened.join(""), "/home/gm")
     check("and names the directory it left, so the cursor lands on it",
           up.pendingSelect, "/home/gm/Work")
-
     var rootDir = pane()
     rootDir.path = "/"
     rootDir.opened = []
@@ -284,7 +282,6 @@ function run(check) {
     check("the root does not climb", rootDir.opened.length, 0)
     check("and does not plant a select on a climb that did not happen",
           rootDir.pendingSelect, "")
-
     var home = pane()
     home.path = "/home"
     home.opened = []
@@ -292,7 +289,6 @@ function run(check) {
     Nav.parent(home)
     check("a child of the root climbs to the root", home.opened.join(""), "/")
     check("and still names the directory it left", home.pendingSelect, "/home")
-
     var busyUp = pane()
     busyUp.listInFlight = true
     busyUp.path = "/home/gm/Work"

@@ -624,6 +624,14 @@ out=$(watch_run "$WT" burst_of_creates)
 check_changed "a hundred creates answer a handful of changed lines, not a hundred" "$out" 1 10
 sandbox_remove "$WT_SB"
 
+# A test-only opendir barrier pins a real size worker until the parent releases it. These
+# requests must finish while it is blocked; no sleeps or tree-size guesses choose the race.
+ASYNC_SB="$FIXTURE_ROOT/flea-dirsize-async-$$"
+sandbox_make "$ASYNC_SB"
+python3 tests/dirsize-async.py "$ASYNC_SB" "$BIN"
+check "running size jobs allow cancel, list, sort and quit without stale replies" "0" "$?"
+sandbox_remove "$ASYNC_SB"
+
 # No per-key cleanup: the cache is inside the sandbox, so it goes when the sandbox does.
 sandbox_remove "$SB"
 exit $fail

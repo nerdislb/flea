@@ -13,6 +13,7 @@ import "js/Nav.js" as Nav
 import "js/Ops.js" as Ops
 import "js/Renderer.js" as Renderer
 import "js/Search.js" as Search
+import "js/Startup.js" as Startup
 
 ShellRoot {
     FloatingWindow {
@@ -98,6 +99,12 @@ ShellRoot {
                 Qt.callLater(view.rememberDual)
             }
             function rememberPaths() {
+                // "Last folder" has to have a folder to return to, and the pair below is the dual
+                // view's own. The primary pane is the one a single-view window opens, so it is the
+                // one recorded; a write that lands the value already stored owes nothing, see
+                // ui/ViewState.qml "owe".
+                if (initialized && !dualMode && primaryPane.path)
+                    ViewState.rememberLastPath(primaryPane.path)
                 if (!initialized || !dualMode || !secondPane.item || !primaryPane.path || !secondPane.item.pane.path) return
                 Qt.callLater(view.rememberDual)
             }
@@ -481,15 +488,28 @@ ShellRoot {
             }
 
             Component.onCompleted: {
-                var start = Quickshell.env("FLEA_PATH") || Quickshell.env("HOME")
+                var home = Quickshell.env("HOME")
+                var start = Startup.startPath(ViewState.state, home, Quickshell.env("FLEA_PATH"))
                 // Read once: Pane.applyPendingSelect() forgets it after the first rows response.
                 var paths = (ViewState.state.dual || {}).paths || []
                 primaryPane.pendingSelect = Quickshell.env("FLEA_SELECT") || ""
                 primaryPane.open(view.dualMode && paths.length === 2 ? paths[0] : start)
                 view.initialized = true
                 if (view.dualMode) view.focusPane(view.focusSide)
+                trashSweep.start()
             }
         }
+    }
+
+    // The 30 day sweep runs off the startup path, not on it: a Trash listing costs one gio call per
+    // item and first paint is measured. Late enough that the window is up and the backend is
+    // answering, long before anyone reaches the Trash rail row. ui/TrashHost.qml refuses it when the
+    // setting is off, when it has already run today, and when the Trash window exists at all.
+    Timer {
+        id: trashSweep
+        interval: 2000
+        repeat: false
+        onTriggered: primaryPane.trash.sweep()
     }
 
     // The seam the tests drive, see AGENTS.md "Testing". Every reader lives in ui/Ipc.qml.

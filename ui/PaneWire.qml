@@ -2,6 +2,7 @@ import QtQuick
 import "." as Flea
 import "js/DirSizes.js" as DirSizes
 import "js/Errors.js" as Errors
+import "js/Anchor.js" as Anchor
 import "js/Nav.js" as Nav
 import "js/Ops.js" as Ops
 import "js/LocalSend.js" as LocalSendJs
@@ -35,7 +36,7 @@ Item {
     property string renameOnArrival: ""
     // A watched change landed while one of the states below owned the rows, so the re-read is owed.
     property bool stale: false
-    // What the cursor sat on across a watched re-read, or null; ui/js/Nav.js owns both ends of it.
+    // What the cursor sat on across a re-read, or null; ui/js/Anchor.js owns both ends of it.
     property var anchor: null
     property int retryId: 0
     property var retryPaths: []
@@ -83,7 +84,7 @@ Item {
         if (root.watchBusy)
             return
         root.stale = false
-        root.anchor = Nav.refreshWatched(pane)
+        root.anchor = Anchor.watched(pane)
     }
     // The owed re-read goes through the timer rather than straight out of this handler: reading
     // watchBusy back inside its own change notification re-enters the binding, which Qt reports as a
@@ -171,7 +172,7 @@ Item {
             if (pane.rowsAt === 0 && pane.inputAt > 0 && pane.rowFor(pane.cursorIndex))
                 pane.rowsAt = Date.now()
             pane.applyPendingSelect()
-            root.anchor = Nav.applyAnchor(pane, root.anchor)
+            root.anchor = Anchor.apply(pane, root.anchor)
             Tabs.applyPending(pane)
             pane.listArea.restartSettle()
             if (pane.listInFlight) {
@@ -311,6 +312,9 @@ Item {
             } else pane.refresh("")
         }
 
+        // The listing is read again with the cursor left where the deleted rows were, and the row
+        // that took their place selected, so the next delete needs no mouse. The whole selection is
+        // gone from disk, so there is nothing to carry over but the position.
         function onTrashed(ok, failed) {
             pane.sticky("")
             pane.message(Ops.trashed(ok, failed), ok === 0)
@@ -319,7 +323,7 @@ Item {
                 pane.trashedFirst = -1
             }
             pane.clearSelection()
-            pane.refresh("")
+            root.anchor = Anchor.afterDelete(pane)
         }
 
         // The listing is re-read with the new name selected, so the row the operator was on stays
