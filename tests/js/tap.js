@@ -158,6 +158,19 @@ function run(check) {
     check("the second tap opens", double_.did.join(","),
           "selectOnly,selectOnly,open")
 
+    var zip = pane()
+    zip.rowFor = function () { return { n: "My Archive.ZIP", d: false } }
+    Tap.tapped(4, 1, Qt.NoModifier, zip)
+    check("one ZIP tap only selects", zip.did.join(","), "selectOnly")
+    Tap.tapped(4, 2, Qt.NoModifier, zip)
+    check("ZIP double tap dispatches extraction", zip.did.join(","), "selectOnly,selectOnly,open-zip")
+    zip.did = []; zip.searchMode = "results"
+    Tap.tapped(4, 2, Qt.NoModifier, zip)
+    check("ZIP search result still reveals", zip.did.join(","), "selectOnly,reveal")
+    zip.did = []; zip.searchMode = ""; zip.rowFor = function () { return { n: "folder.zip", d: true } }
+    Tap.tapped(4, 2, Qt.NoModifier, zip)
+    check("ZIP-named directory still navigates", zip.did.join(","), "selectOnly,open")
+
     // A triple click is one open and not two: tapCount keeps counting while the taps keep coming.
     var triple = pane()
     for (var t = 1; t <= 3; t++)

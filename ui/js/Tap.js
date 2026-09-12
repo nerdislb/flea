@@ -34,8 +34,11 @@ function tapped(index, tapCount, modifiers, root) {
     // What the second tap means is the search's to say, not this file's: on a result the operator's
     // ruling is that it takes you to the file rather than launching it, and ui/js/Search.js
     // activateAction answers "open" everywhere else. It was written for this call and had none.
-    if (tapCount === 2)
-        root.act(Search.activateAction(root))
+    if (tapCount === 2) {
+        var action = Search.activateAction(root)
+        var row = root.rowFor ? root.rowFor(index) : null
+        root.act(action === "open" && row && !row.d && /\.zip$/i.test(row.n) ? "open-zip" : action)
+    }
 }
 
 // Right click, in all three views: the row under the pointer takes the cursor and the menu opens there.

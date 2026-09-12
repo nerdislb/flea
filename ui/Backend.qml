@@ -224,8 +224,8 @@ Item {
         root.send({ c: "archive", op: "compress", paths: paths, dest: dest, format: format, menuId: menuId || 0 })
     }
 
-    function extract(path, dest, menuId) {
-        root.send({ c: "archive", op: "extract", path: path, dest: dest, menuId: menuId || 0 })
+    function extract(path, dest, menuId, here) {
+        root.send({ c: "archive", op: here ? "extract-here" : "extract", path: path, dest: dest, menuId: menuId || 0 })
     }
 
     // No format field: magick reads the codec off dest's own extension, see docs/protocol.md "convert".

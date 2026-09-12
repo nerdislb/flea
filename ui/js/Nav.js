@@ -1,5 +1,4 @@
 .pragma library
-
 .import "DirSizes.js" as DirSizes
 .import "Filter.js" as Filter
 .import "Kinds.js" as Kinds
@@ -210,7 +209,7 @@ function applyPendingSelect(pane) {
 
 // Enter on the cursor row: a directory navigates, an archive opens Flea's own view, anything else
 // goes to the opener. The in-flight guard is what stops a second Enter queueing a second listing.
-function openCursor(pane, opener) {
+function openCursor(pane, opener, extractZip) {
     if (pane.listInFlight) {
         pane.message("A directory is already loading.", false)
         return
@@ -229,6 +228,7 @@ function openCursor(pane, opener) {
         pane.open(path)
         return
     }
+    if (extractZip && /\.zip$/i.test(row.n)) { pane.openFile(path); return }
     // Handing an archive on opens another file manager, and this is ui/Preview.qml's own classifier.
     if (Kinds.quickLookKind(row.i, path) === Kinds.ARCHIVE) {
         pane.preview.open(path, row.i, row.s)

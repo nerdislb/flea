@@ -2,6 +2,17 @@
 .import "../../ui/js/Convert.js" as Convert
 
 function run(check) {
+    var calls = [], notices = []
+    var pane = { listInFlight: false, backend: { extract: function (path, dest, menu, here) { calls.push([path, dest, here].join("|")) } }, sticky: function (s) { notices.push(s) }, message: function (s) { notices.push(s) } }
+    var opener = { open: function (path) { calls.push("open:" + path) } }
+    Archive.openDoubleClickedFile(pane, opener, "/tmp/My Archive.ZIP")
+    check("ZIP extracts directly beside its own path", calls[0], "/tmp/My Archive.ZIP|/tmp|true")
+    Archive.openDoubleClickedFile(pane, opener, "/tmp/file.txt")
+    check("ordinary files keep their opener", calls[1], "open:/tmp/file.txt")
+    pane.listInFlight = true
+    Archive.openDoubleClickedFile(pane, opener, "/tmp/busy.zip")
+    check("pending navigation cannot extract another archive", calls.length, 2)
+
     check("the longest extension is matched first, so tar.gz is not read as gz",
           Archive.isArchive("backup.tar.gz") + "|" + Archive.extractDir("backup.tar.gz"),
           "true|backup")

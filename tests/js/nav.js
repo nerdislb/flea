@@ -58,14 +58,15 @@ function browsing(history) {
 }
 // What Enter did with one row, as one line: the directory it navigated to, the preview it opened,
 // and the path it handed the opener. Exactly one of the three may be filled for any row.
-function entered(row) {
+function entered(row, extractZip) {
     var p = pane()
     var went = ["", "", ""]
     p.rowFor = function (index) { return row }
     p.join = function (base, name) { return base + "/" + name }
     p.open = function (target) { went[0] = target }
     p.preview = { open: function (path, icon, size) { went[1] = path + " " + icon + " " + size } }
-    Nav.openCursor(p, { open: function (path) { went[2] = path } })
+    p.openFile = function (path) { went[2] = "extract:" + path }
+    Nav.openCursor(p, { open: function (path) { went[2] = path } }, extractZip)
     return went.join("|")
 }
 // The two readings a crumb check makes: what the bar draws, and where each piece would take you.
@@ -259,6 +260,9 @@ function run(check) {
     check("Enter on an archive opens Flea's own preview and launches nothing",
           entered({ n: "backup.zip", i: "package-x-generic", s: 4096 }),
           "|/home/gm/backup.zip package-x-generic 4096|")
+    check("ZIP pointer route extracts instead of previewing",
+          entered({ n: "My Archive.ZIP", i: "package-x-generic", s: 4096 }, true),
+          "||extract:/home/gm/My Archive.ZIP")
     // The two answers that must not move, or the archive route would be a rewrite rather than a route.
     check("a directory still navigates and every other row still goes to the opener",
           entered({ n: "Work", d: true }) + " / " + entered({ n: "notes.txt", i: "text-x-generic", s: 12 }),

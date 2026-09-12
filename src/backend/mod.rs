@@ -3,6 +3,7 @@ pub mod aliases;
 pub mod archive;
 pub mod archivelist;
 pub mod archiveops;
+pub mod archivehere;
 pub mod archivespec;
 pub mod archivereq;
 pub mod archivework;
@@ -74,3 +75,5 @@ pub mod fifotest;
 // Test-only: the one probe that says whether this box can actually run the bwrap jail.
 #[cfg(test)]
 pub mod sandboxprobe;
+
+pub mod dirsizeworker;

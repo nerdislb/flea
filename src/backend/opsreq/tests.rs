@@ -84,7 +84,7 @@ fn menu_workers_refuse_replacement_sources_before_helpers_or_mutations() {
     let destination = d.join("output.zip");
     assert!(destination.is_absolute() && destination.starts_with(d.path()));
     let (tx, rx) = channel();
-    crate::backend::archivereq::run_archive(1, true, vec![path.to_string_lossy().into()], "zip".into(), PathBuf::new(),
+    crate::backend::archivereq::run_archive(1, true, false, vec![path.to_string_lossy().into()], "zip".into(), PathBuf::new(),
         destination.clone(), &crate::backend::archive::Formats::from_tools(false, false), tx, Some(captured.clone()));
     let OpMsg::Meta { line } = rx.recv().unwrap() else { panic!("archive terminal result"); };
     assert!(line.contains(r#""ok":false"#) && line.contains("changed"));

@@ -63,7 +63,7 @@ pub fn formats_line(formats: &Formats, can_convert: bool) -> String {
         names.join(","), can_convert, formats.offers("tar"), formats.offers("7z"))
 }
 
-pub(crate) fn run_archive(id: usize, compressing: bool, paths: Vec<String>, format: String,
+pub(crate) fn run_archive(id: usize, compressing: bool, here: bool, paths: Vec<String>, format: String,
                    archive: PathBuf, dest: PathBuf, formats: &Formats, tx: Sender<OpMsg>, selection: Option<Vec<Selected>>) {
     let sources: Vec<PathBuf> = if compressing { paths.iter().map(PathBuf::from).collect() } else { vec![archive.clone()] };
     let result = if let Err(error) = validate_sources(selection.as_deref(), &sources) {
@@ -74,6 +74,8 @@ pub(crate) fn run_archive(id: usize, compressing: bool, paths: Vec<String>, form
             Some((parent, names)) => compress(formats, &parent, &names, &format, &dest).map(|()| true),
             None => Err(op_err("archive", "", "a compress takes absolute paths from one directory")),
         }
+    } else if here {
+        super::archivehere::extract_here(formats, &archive, &dest)
     } else {
         extract(formats, &archive, &dest)
     };
@@ -112,8 +114,8 @@ pub fn start_archive(
     menu_id: usize,
 ) {
     // An op that names neither would otherwise fall through to extract, so it is refused by name.
-    if op != "compress" && op != "extract" {
-        writeln!(out, "{}", error_line(&op_err("archive", op, "op must be compress or extract"))).ok();
+    if op != "compress" && op != "extract" && op != "extract-here" {
+        writeln!(out, "{}", error_line(&op_err("archive", op, "op must be compress, extract or extract-here"))).ok();
         out.flush().ok();
         return;
     }
@@ -122,12 +124,13 @@ pub fn start_archive(
         Err(message) => { writeln!(out, "{}", error_line(&op_err("archive", "", &message))).ok(); out.flush().ok(); return; }
     };
     let compressing = op == "compress";
+    let here = op == "extract-here";
     let id = ops.claim_id();
     writeln!(out, "{}", archivestarted_line(id)).ok();
     out.flush().ok();
     let tx = ops.tx.clone();
     thread::spawn(move || {
-        run_archive(id, compressing, paths, format, archive, dest, &formats, tx, selection)
+        run_archive(id, compressing, here, paths, format, archive, dest, &formats, tx, selection)
     });
 }
 

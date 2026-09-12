@@ -51,3 +51,11 @@ function formatEntries(formats) {
     }
     return out
 }
+
+// Pointer opens of ZIPs unpack beside the source, including neighbour-column rows.
+function openDoubleClickedFile(pane, opener, path) {
+    if (!/\.zip$/i.test(path)) { opener.open(path); return }
+    if (pane.listInFlight) { pane.message("A directory is already loading.", false); return }
+    pane.backend.extract(path, path.substring(0, path.lastIndexOf("/")) || "/", 0, true)
+    pane.sticky("Extracting " + path.substring(path.lastIndexOf("/") + 1))
+}
