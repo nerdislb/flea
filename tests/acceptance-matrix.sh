@@ -67,9 +67,8 @@ import pathlib, sys
 rows = [line.split('|') for line in pathlib.Path(sys.argv[1]).read_text().splitlines()]
 assert all(len(row) == 4 for row in rows)
 assert len(rows) == len({(row[0], row[3]) for row in rows})
-# 31 including the local LocalSend action, derived by running the suite's own derive_menu_actions and counting the distinct non-header
-# ids in its output, not by counting declarations in Menu.js. It was 29 and drifted when 0.2.0 added
-# Move to, Copy to, Properties, Permissions, New file, Delete permanently and Add to Favorites.
+# The upstream inventory has 30 distinct non-header ids; the trial adds LocalSend.
+# Derive from the emitted menu rows rather than counting declarations in Menu.js.
 assert len({row[0] for row in rows if row[3] != 'header'}) == 31
 assert ['localsend', 'localsend', 'Send via LocalSend', 'file'] in rows
 assert ['delete', 'deletePermanently', 'Delete permanently', 'file'] in rows
