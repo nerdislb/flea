@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+"""Opt in to local Flea portal/reveal/archive integration without Hyprland changes."""
+from pathlib import Path
+from datetime import datetime
+import json
+import os
+import shlex
+import shutil
+import subprocess
+
+root = Path(__file__).resolve().parents[1]
+home = Path.home()
+data = Path(os.environ.get('XDG_DATA_HOME', home / '.local/share'))
+config = Path(os.environ.get('XDG_CONFIG_HOME', home / '.config'))
+state = Path(os.environ.get('XDG_STATE_HOME', home / '.local/state'))
+launcher = home / '.local/bin/flea'
+helpers = home / '.local/lib/flea'
+desktop = os.environ.get('XDG_CURRENT_DESKTOP', '').split(':')[0].lower()
+if desktop != 'umbriel':
+    raise SystemExit('This integration is scoped to the Umbriel desktop.')
+if not launcher.is_file() or not (data / 'flea/ui/picker.qml').is_file():
+    raise SystemExit('Install the nbshell trial first.')
+portal_config = config / 'xdg-desktop-portal/umbriel-portals.conf'
+existing = portal_config if portal_config.exists() else data / 'xdg-desktop-portal/umbriel-portals.conf'
+if not existing.is_file():
+    raise SystemExit('No known Umbriel portal routing; inspect before configuring.')
+text = existing.read_text()
+if '[preferred]' not in text.splitlines():
+    raise SystemExit('No supported preferred group; inspect before configuring.')
+backup = state / 'flea' / ('integration-' + datetime.now().strftime('%Y%m%d-%H%M%S'))
+backup.mkdir(parents=True, exist_ok=False)
+manifest = {}
+
+def remember(path):
+    path = Path(path)
+    if str(path) in manifest:
+        return
+    saved = backup / str(len(manifest))
+    if path.exists():
+        shutil.copy2(path, saved)
+        manifest[str(path)] = str(saved)
+    else:
+        manifest[str(path)] = None
+    (backup / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+
+def write(path, text, executable=False):
+    remember(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+    if executable:
+        path.chmod(0o755)
+
+for name, bus in [('flea-portal', 'org.freedesktop.impl.portal.desktop.flea'),
+                  ('flea-filemanager1', 'org.freedesktop.FileManager1')]:
+    write(helpers / (name + '.py'), (root / 'tools' / name).read_text())
+    wrapper = '#!/bin/sh\nexport FLEA_BIN=' + shlex.quote(str(launcher)) + '\n'
+    wrapper += 'exec /usr/bin/python3 ' + shlex.quote(str(helpers / (name + '.py'))) + ' "$@"\n'
+    write(helpers / name, wrapper, True)
+    write(data / 'dbus-1/services' / (bus + '.service'),
+          '# Managed by Flea nbshell integration.\n[D-BUS Service]\nName=' + bus +
+          '\nExec=' + str(helpers / name) + '\n')
+write(data / 'xdg-desktop-portal/portals/flea.portal', (root / 'packaging/flea.portal').read_text())
+# Preserve the effective routing inspected before any activation files were changed.
+key = 'org.freedesktop.impl.portal.FileChooser='
+lines = text.splitlines()
+group = None
+found = False
+for index, line in enumerate(lines):
+    if line.strip().startswith('['):
+        group = line.strip()
+    elif group == '[preferred]' and line.strip().startswith(key):
+        lines[index] = key + 'flea;gtk'
+        found = True
+if not found:
+    index = lines.index('[preferred]') + 1
+    lines.insert(index, key + 'flea;gtk')
+write(portal_config, '\n'.join(lines) + '\n')
+# GTK applications launched in future sessions should use the chosen desktop portal too.
+# Do not replace QT_QPA_PLATFORMTHEME: that would also change the desktop's Qt theme.
+write(config / 'environment.d/60-flea-portal.conf', 'GTK_USE_PORTAL=1\n')
+types = ['application/zip', 'application/x-7z-compressed', 'application/vnd.rar',
+         'application/x-rar', 'application/x-rar-compressed', 'application/x-tar',
+         'application/x-compressed-tar', 'application/x-xz-compressed-tar',
+         'application/x-bzip-compressed-tar', 'application/x-zstd-compressed-tar']
+entry = 'com.thisisgm.flea.archives.desktop'
+write(data / 'applications' / entry,
+      '[Desktop Entry]\nType=Application\nName=Flea Archives\n'
+      'Comment=Show archives in Flea for preview or extraction\n'
+      'Exec=' + str(launcher) + ' --gui --select %f\nIcon=com.thisisgm.flea\n'
+      'Terminal=false\nNoDisplay=true\nMimeType=' + ';'.join(types) + ';\n')
+remember(config / 'mimeapps.list')
+subprocess.run(['update-desktop-database', str(data / 'applications')], check=True)
+for mime in types:
+    subprocess.run(['xdg-mime', 'default', entry, mime], check=True)
+subprocess.run(['xdg-mime', 'default', 'com.thisisgm.flea.desktop', 'inode/directory'], check=True)
+print('Integration installed. Backup:', backup)
+print('Restart xdg-desktop-portal, then verify FileChooser and FileManager1 on the session bus.')
