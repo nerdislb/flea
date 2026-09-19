@@ -36,6 +36,21 @@ function pad(n) {
     return n < 10 ? "0" + n : "" + n
 }
 
+// Directory st_size describes the entry itself, even when a populated cloud folder reports zero.
+function propertySize(facts) {
+    if (facts.directory) return "Not calculated"
+    return size(facts.bytes) + " (" + facts.bytes + " bytes)"
+}
+
+function storageFacts(facts) {
+    if (!facts.filesystem) return []
+    var rows = [["Storage", facts.filesystem === "fuse.rclone" ? "rclone mount" : facts.filesystem]]
+    if (facts.filesystem === "fuse.rclone") {
+        rows.push(["Upload status", "Unavailable. Files may still be uploading after a copy finishes."])
+    }
+    return rows
+}
+
 // "2026-09-12 15:29", the one form every surface prints, in the machine's local wall clock.
 function stamp(d) {
     return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate())
@@ -140,4 +155,9 @@ function shellQuoted(path) {
         return text
     }
     return "'" + text.split("'").join("'\\''") + "'"
+}
+
+// A preview has no recursive directory result: never substitute the entry size.
+function rowSize(row) {
+    return row.d ? "Not calculated" : size(row.s)
 }
