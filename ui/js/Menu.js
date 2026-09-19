@@ -32,6 +32,7 @@ var INVENTORY = [
     ["compress", "Compress", "archive", "F", "archive"],
     ["extract", "Extract", "archive-out", "F", "archive"],
     ["convert", "Convert", "sliders", "F", "archive"],
+    ["cloudUpload", "Upload to cloud…", "network", "F", "share"],
     ["taildrop", "Send with Taildrop", "tailscale", "F", "share"],
     ["dropbox", "Move to Dropbox", "dropbox", "F", "share"],
     ["sharelink", "Copy Share Link", "network", "F", "share"],
@@ -94,7 +95,7 @@ function availableEntry(e, p, kind) {
     if (e.action === "addFavourite" && kind === "F")
         e.disabled = count !== 1 || ((Number(p.rowMode) || 0) & 0o170000) !== 0o040000
     if (e.action === "paste") e.disabled = p.clipboardAvailable !== true
-    if (["duplicate", "rename", "properties"].indexOf(e.action) >= 0)
+    if (["duplicate", "rename", "properties", "cloudUpload"].indexOf(e.action) >= 0)
         e.disabled = count !== 1
     if (e.action === "permissions") {
         var permission = permissionsEntry(p.rowMode, count)

@@ -1,4 +1,5 @@
 mod backend;
+mod cloudcopy;
 mod chooser;
 mod defaults;
 mod error;
@@ -138,6 +139,15 @@ fn main() {
 
     if args.iter().any(|a| a == "--backend") {
         exit(backend::run::run());
+    }
+
+    if args.get(1).map(String::as_str) == Some("--cloud-targets") {
+        if args.len() != 2 { usage("--cloud-targets takes no arguments"); }
+        exit(cloudcopy::targets());
+    }
+    if args.get(1).map(String::as_str) == Some("--cloud-copy") {
+        if args.len() != 5 { usage("--cloud-copy takes target id, relative folder and absolute source"); }
+        exit(cloudcopy::run(&args[2], &args[3], &args[4]));
     }
 
     // flea --prewarm <path> <count> <dest>

@@ -39,6 +39,7 @@ QtObject {
     // The wrapper holds the references because an IpcHandler marshals every property it owns.
     property IpcHandler seam: IpcHandler {
         target: "flea"
+        function cloudUploadState(): string { return JSON.stringify(root.pane.menuActions.cloudUpload.snapshot) }
         function ready(): bool { return true }
         function themeLoaded(): bool { return Theme.ready }
         function themeForeground(): string { return String(Theme.color.foreground) }

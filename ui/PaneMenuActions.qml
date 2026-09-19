@@ -1,17 +1,20 @@
 import QtQuick
+import "." as Flea
 import "js/Menu.js" as Menu
 import "js/Ops.js" as Ops
 
 Loader {
     id: root
     required property var pane
+    readonly property alias cloudUpload: cloudUpload
+    Flea.CloudUploadHost { id: cloudUpload }
     anchors.fill: parent
     z: 2
     active: false
     // OpenWith.html rule 4: Open with owns its own card, so the shared dialog is not asked to be one.
     property string dialogFor: ""
     source: root.dialogFor === "openWith" ? "OpenWithDialog.qml" : "MenuActionDialog.qml"
-    readonly property bool opened: item !== null && item.opened
+    readonly property bool opened: cloudUpload.opened || (item !== null && item.opened)
     readonly property bool deleting: item !== null && item.deletionActive
     property int requestId: 0
     property string identity: ""
@@ -295,7 +298,7 @@ Loader {
             root.pendingAction = ""
             root.pendingActivation = false
             root.providersRefreshing = false
-            if (root.opened || root.deleting) root.item.receive({id: root.requestId, op: root.deleting ? "delete" : "", ok: false, error: message})
+            if (root.item && (root.opened || root.deleting)) root.item.receive({id: root.requestId, op: root.deleting ? "delete" : "", ok: false, error: message})
         }
     }
     Connections {

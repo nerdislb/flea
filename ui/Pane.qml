@@ -313,6 +313,7 @@ FocusScope {
         Focus.act(action, root, menuId, paths)
     }
     function performMenu(action, menuId, paths) {
+        if (action === "cloudUpload") { menuActions.cloudUpload.open(paths, root.listArea); return }
         if (action.indexOf("taildrop:") === 0) { root.sendTaildrop(action.substring("taildrop:".length), paths && paths.length === 1 ? paths[0] : ""); return }
         if (action === "sharelink") { root.copyShareLink(paths && paths.length === 1 ? paths[0] : ""); return }
         if (action === "copypath") { wire.opener.copyText(paths && paths.length ? paths[0] : root.join(root.path, root.cursorRow.n)); return }
