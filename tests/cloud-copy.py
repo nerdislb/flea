@@ -41,8 +41,8 @@ try:
     (folder / 'photo.bin').write_bytes(os.urandom(40000))
     (folder / 'empty').mkdir()
 
-    def start(path, extra=None):
-        return subprocess.Popen([executable, '--cloud-copy', 'test', '', str(path)], env=extra or env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    def start(path, extra=None, folder=""):
+        return subprocess.Popen([executable, '--cloud-copy', 'test', folder, str(path)], env=extra or env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     def result(process):
         code = process.wait(timeout=30)
@@ -60,6 +60,11 @@ try:
     assert (remote / 'target/album/photo.bin').read_bytes() == (folder / 'photo.bin').read_bytes()
     assert not (remote / 'target/album/empty').exists()
     print('PASS file/folder basenames, hidden files, explicit MD5 confirmation')
+    for reserved in ['--backend', '--version']:
+        code, events = result(start(single, folder=reserved))
+        assert code == 0 and events[-1]['state'] == 'done', events
+        assert (remote / 'target' / reserved / single.name).read_bytes() == single.read_bytes()
+    print('PASS reserved-looking destination folders remain data, not mode switches')
     code, events = result(start(single))
     assert code == 0 and events[-1]['state'] == 'done', events
     (remote / 'target' / single.name).write_text('existing different content')

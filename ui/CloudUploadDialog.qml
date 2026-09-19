@@ -53,7 +53,7 @@ FocusScope {
             anchors.fill: parent; anchors.margins: Theme.spacing.rowPaddingX
             Column {
                 width: body.width; spacing: Theme.spacing.gap
-                Text { width: parent.width; text: "Upload to cloud"; textFormat: Text.PlainText; color: Theme.color.foreground; font { family: Theme.font.family; pixelSize: Theme.font.body; bold: true } }
+                Flea.DialogTitle { width: parent.width; text: "Upload to cloud" }
                 Text {
                     width: parent.width; text: root.sourcePath; textFormat: Text.PlainText; elide: Text.ElideMiddle
                     color: Theme.color.muted; font { family: Theme.font.family; pixelSize: Theme.font.caption }

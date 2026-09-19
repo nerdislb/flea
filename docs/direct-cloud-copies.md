@@ -66,8 +66,8 @@ Neither uses an actual cloud account.
 ### UI composition and acceptance scope
 
 There is no identical upstream cloud-copy dialog. This addition composes Flea's
-existing `MenuActionDialog.qml` card geometry and the existing plain-text dialog title, `DialogField`,
-`DialogButton`, `CardScroll` primitives at upstream baseline `b992e76`, using existing Theme
+existing `MenuActionDialog.qml` card geometry and `DialogTitle`, `DialogField`,
+`DialogButton`, `CardScroll` primitives at upstream baseline `f738261`, using existing Theme
 and Commons Style roles. It adds no Controls import, palette, animation system or
 new shared tokens. The dialog is lazy and restores the originating list's focus.
 The offscreen suite verifies behavior/imports only; live dark/light, narrow-window,
