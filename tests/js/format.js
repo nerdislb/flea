@@ -1,6 +1,10 @@
 .import "../../ui/js/Format.js" as Format
 
 function run(check) {
+    check("pending directory size is not empty", Format.directorySize(null), "·")
+    check("incomplete zero walk is unknown", Format.directorySize({partial: true, bytes: 0}), "Unknown")
+    check("complete empty walk really is zero", Format.directorySize({partial: false, bytes: 0}), "0 B")
+    check("partial positive walk is a lower bound", Format.directorySize({partial: true, bytes: 1000}), ">1.0 kB")
     check("a populated cloud directory's zero entry size is unknown, not empty",
           Format.propertySize({directory: true, bytes: 0}), "Not calculated")
     check("a local directory's nonzero entry size is not its contents either",
@@ -9,9 +13,9 @@ function run(check) {
           Format.propertySize({directory: false, bytes: 0}), "0 B (0 bytes)")
     check("older file replies retain their exact size",
           Format.propertySize({bytes: 12}), "12 B (12 bytes)")
-    check("rclone reports unavailable telemetry, never an invented upload state",
+    check("rclone directs users to live mount telemetry",
           JSON.stringify(Format.storageFacts({filesystem: "fuse.rclone"})),
-          JSON.stringify([["Storage", "rclone mount"], ["Upload status", "Unavailable. Files may still be uploading after a copy finishes."]]))
+          JSON.stringify([["Storage", "rclone mount"], ["Upload status", "See the cloud status bar. A completed copy may still be uploading."]]))
     check("generic fuse does not imply rclone", Format.storageFacts({filesystem: "fuse"}).length, 1)
     check("missing mount information adds no claim", Format.storageFacts({}).length, 0)
     // One grouping rule for every count the product prints: the search's scan and the filter's scope.

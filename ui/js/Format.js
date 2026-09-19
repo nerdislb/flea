@@ -37,6 +37,12 @@ function pad(n) {
 }
 
 // Directory st_size describes the entry itself, even when a populated cloud folder reports zero.
+function directorySize(result) {
+    if (!result) return "·"
+    if (result.partial && result.bytes === 0) return "Unknown"
+    return (result.partial ? ">" : "") + size(result.bytes)
+}
+
 function propertySize(facts) {
     if (facts.directory) return "Not calculated"
     return size(facts.bytes) + " (" + facts.bytes + " bytes)"
@@ -46,7 +52,7 @@ function storageFacts(facts) {
     if (!facts.filesystem) return []
     var rows = [["Storage", facts.filesystem === "fuse.rclone" ? "rclone mount" : facts.filesystem]]
     if (facts.filesystem === "fuse.rclone") {
-        rows.push(["Upload status", "Unavailable. Files may still be uploading after a copy finishes."])
+        rows.push(["Upload status", "See the cloud status bar. A completed copy may still be uploading."])
     }
     return rows
 }
