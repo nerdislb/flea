@@ -11,7 +11,7 @@ FocusScope {
     property Item focusHolder: null
     property int targetIndex: 0
     readonly property var state: job.snapshot
-    readonly property var acceptance: ({state: state.state, message: state.message, bytes: state.bytes, total: state.total, speed: state.speed, opened: opened, busy: job.busy, source: sourcePath, folder: folder.text, target: job.targets.length ? job.targets[targetIndex].id : ""})
+    readonly property var acceptance: ({state: state.state, message: state.message, bytes: state.bytes, total: state.total, speed: state.speed, traffic: trafficLine.text, opened: opened, busy: job.busy, source: sourcePath, folder: folder.text, target: job.targets.length ? job.targets[targetIndex].id : ""})
     visible: opened
     function open(path, holder) {
         if (job.busy) return
@@ -83,8 +83,9 @@ FocusScope {
                     font { family: Theme.font.family; pixelSize: Theme.font.body }
                 }
                 Text {
-                    width: parent.width; visible: job.busy; textFormat: Text.PlainText
-                    text: job.snapshot.state.charAt(0).toUpperCase() + job.snapshot.state.slice(1) + (job.snapshot.total > 0 ? " · " + Format.size(job.snapshot.bytes) + " / " + Format.size(job.snapshot.total) + " · " + Format.size(job.snapshot.speed) + "/s" : "")
+                    id: trafficLine
+                    width: parent.width; visible: job.busy; textFormat: Text.PlainText; wrapMode: Text.Wrap
+                    text: job.snapshot.state.charAt(0).toUpperCase() + job.snapshot.state.slice(1) + (job.snapshot.total > 0 ? "\nTransfer traffic (including retries): " + Format.size(job.snapshot.bytes) + " / " + Format.size(job.snapshot.total) + " · " + Format.size(job.snapshot.speed) + "/s" : "")
                     color: Theme.color.muted; font { family: Theme.font.family; pixelSize: Theme.font.caption }
                 }
                 Text {

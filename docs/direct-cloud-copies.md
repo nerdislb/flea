@@ -40,9 +40,13 @@ or cloud-mounted sources are refused. Each job is limited to 100,000 source entr
 and 32 MiB of command output. Preparation and verification read source metadata
 outside the GUI thread; no recursive work is added to listing or scrolling.
 
-States are Preparing, Uploading (bytes/total/rate where reported), Verifying,
+States are Preparing, Uploading (transfer traffic/rate where reported), Verifying,
 verified completion, error and cancellation. A zero rate is **not** diagnosed as a
-Google quota error. Cancel and window close stop only this job; uploaded/partial
+Google quota error. The byte line reports rclone transfer accounting, including
+retry traffic, not the unique size of the selected files. Both transferred bytes
+and rclone's estimated total can grow when data is retried; they are not a
+folder-size measurement or checksum-confirmed completion percentage. Cancel and
+window close stop only this job; uploaded/partial
 remote objects may remain, originals remain intact. Retry rechecks complete files;
 partial-file resume and persistence across application restarts are not promised.
 The owned worker has a 24-hour job bound, rclone connection/idle timeouts, bounded
